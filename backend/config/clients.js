@@ -1,27 +1,52 @@
-const twilio = require('twilio');
-const redis = require('redis');
 require('dotenv').config();
+const twilio = require('twilio');
 
-const twilioClient = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
+/* ================== TWILIO ================== */
+let twilioClient = null;
+
+if (
+  process.env.TWILIO_ACCOUNT_SID &&
   process.env.TWILIO_AUTH_TOKEN
-);
+) {
+  twilioClient = twilio(
+    process.env.TWILIO_ACCOUNT_SID,
+    process.env.TWILIO_AUTH_TOKEN
+  );
+} else {
+  console.log('ℹ️ Twilio disabled (env vars missing)');
+}
 
-const redisClient = redis.createClient({ url: process.env.REDIS_URL });
+/* ================== REDIS (STRICTLY OPTIONAL) ================== */
+let redisClient = null;
 
-redisClient.on('error', err => console.error('Redis Client Error:', err));
-redisClient.on('connect', () => console.log('Redis Client Connecting...'));
-redisClient.on('ready', () => console.log('Redis Client Ready'));
-redisClient.on('reconnecting', () => console.log('Redis Client Reconnecting...'));
+if (process.env.REDIS_URL && process.env.REDIS_URL.trim() !== '') {
+  const redis = require('redis');
 
-(async () => {
-  try {
-    if (!redisClient.isOpen) {
+  redisClient = redis.createClient({
+    url: process.env.REDIS_URL,
+    socket: {
+      reconnectStrategy: false, // 🚨 THIS IS CRITICAL
+    },
+  });
+
+  redisClient.on('ready', () => {
+    console.log('✅ Redis connected');
+  });
+
+  redisClient.on('error', (err) => {
+    console.warn('⚠️ Redis error (ignored):', err.message);
+  });
+
+  (async () => {
+    try {
       await redisClient.connect();
+    } catch (err) {
+      console.warn('⚠️ Redis unavailable. Running without Redis.');
+      redisClient = null;
     }
-  } catch (err) {
-    console.error("Initial Redis connection failed. App will continue in degraded mode.", err);
-  }
-})();
+  })();
+} else {
+  console.log('ℹ️ REDIS_URL not set. Redis completely disabled.');
+}
 
 module.exports = { twilioClient, redisClient };

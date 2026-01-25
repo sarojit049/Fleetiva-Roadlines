@@ -1,48 +1,52 @@
 require('dotenv').config();
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const cookieParser = require('cookie-parser');
-const errorHandler = require('./middleware/errorHandler');
+const twilio = require('twilio');
 
-// Initialize clients (Redis connection happens here)
-require('./config/clients');
+/* ================= TWILIO ================= */
+let twilioClient = null;
 
-const app = express();
-app.use(express.json());
-app.use(cors({ origin: true, credentials: true })); // origin: true reflects the request origin, allowing any port
-app.use(cookieParser());
-
-const MONGO_URI = process.env.MONGO_URI;
-if (!MONGO_URI) {
-  console.error("FATAL ERROR: MONGO_URI is not defined in .env file.");
-  process.exit(1);
+if (
+  process.env.TWILIO_ACCOUNT_SID &&
+  process.env.TWILIO_AUTH_TOKEN
+) {
+  twilioClient = twilio(
+    process.env.TWILIO_ACCOUNT_SID,
+    process.env.TWILIO_AUTH_TOKEN
+  );
+} else {
+  console.log('ℹ️ Twilio disabled (env vars missing)');
 }
-mongoose.connect(MONGO_URI).then(() => console.log("MongoDB Connected")).catch(err => console.error("MongoDB connection error:", err));
 
-app.get('/api/health', (req, res) => {
-  res.json({ status: "ok", message: "Backend is reachable" });
-});
+/* ================= REDIS (SAFE + OPTIONAL) ================= */
+let redisClient = null;
 
-// Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api', require('./routes/logistics'));
+if (process.env.REDIS_URL && process.env.REDIS_URL.trim() !== '') {
+  const redis = require('redis');
 
-// 404 Handler
-app.use((req, res, next) => {
-  const error = new Error(`Not Found - ${req.originalUrl}`);
-  res.status(404);
-  next(error);
-});
+  redisClient = redis.createClient({
+    url: process.env.REDIS_URL,
+    socket: {
+      reconnectStrategy: false, // 🚨 STOP infinite reconnect
+    },
+  });
 
-// Global Error Handler
-app.use(errorHandler);
+  redisClient.on('ready', () => {
+    console.log('✅ Redis connected');
+  });
 
-const server = app.listen(5001, () => console.log("Server running on port 5001"));
+  redisClient.on('error', (err) => {
+    console.warn('⚠️ Redis error ignored:', err.message);
+  });
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err) => {
-  console.error(`Unhandled Rejection: ${err.message}`);
-  // Close server & exit process
-  server.close(() => process.exit(1));
-});
+  (async () => {
+    try {
+      await redisClient.connect();
+    } catch (err) {
+      console.warn('⚠️ Redis unavailable. Running without Redis.');
+      redisClient = null;
+    }
+  })();
+} else {
+  console.log('ℹ️ REDIS_URL not set. Redis disabled.');
+}
+
+module.exports = { twilioClient, redisClient };
