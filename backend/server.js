@@ -91,6 +91,18 @@ if (process.env.SKIP_FIREBASE === "true") {
   console.warn("⚠️ Firebase env not set — running without Firebase");
 }
 
+// ================= HEALTH ROUTE =================
+app.get("/", (req, res) => {
+  res.json({ status: "Fleetiva backend running" });
+});
+
+// ================= API ROUTES =================
+app.use("/api/auth", require("./routes/auth"));
+app.use("/api/logistics", require("./routes/logistics"));
+
+// ================= ERROR HANDLER =================
+app.use(errorHandler);
+
 // ================= SERVER START & EXPORT =================
 const PORT = process.env.PORT || 5000;
 
