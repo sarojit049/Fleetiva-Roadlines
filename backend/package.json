@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "test": "echo \"No tests defined\" && exit 0",
+    "test": "jest --detectOpenHandles",
     "lint": "echo \"No linting defined\" && exit 0"
   },
   "dependencies": {
@@ -25,6 +25,14 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "mongodb-memory-server": "^11.0.1"
+    "jest": "^30.2.0",
+    "mongodb-memory-server": "^11.0.1",
+    "supertest": "^7.2.2"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "setupFilesAfterEnv": [
+      "./tests/setup.js"
+    ]
   }
 }
