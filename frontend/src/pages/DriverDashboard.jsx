@@ -5,24 +5,24 @@ export default function DriverDashboard() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchBookings = () =>
+    api
+      .get("/driver/bookings")
+      .then((res) => setBookings(res.data))
+      .catch((error) => console.error("Fetch error:", error))
+      .finally(() => setLoading(false));
+
   useEffect(() => {
     fetchBookings();
   }, []);
 
-  const fetchBookings = () => {
-    setLoading(true);
-    api
-      .get("/driver/bookings")
-      .then((res) => setBookings(res.data))
-      .catch((err) => console.error("Fetch error:", err))
-      .finally(() => setLoading(false));
-  };
-
   const updateStatus = async (id, status) => {
     try {
+      setLoading(true);
       await api.patch(`/booking/${id}/status`, { status });
       fetchBookings();
-    } catch (err) {
+    } catch (error) {
+      console.error("Failed to update status:", error);
       alert("Failed to update status");
     }
   };

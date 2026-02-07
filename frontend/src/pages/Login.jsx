@@ -1,7 +1,7 @@
 import { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
-import { AppContext } from "../context/AppContext";
+import { AppContext } from "../context/appContextStore";
 import Toast from "../components/Toast";
 import { auth, googleProvider } from "../firebase";
 

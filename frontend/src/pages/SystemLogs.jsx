@@ -10,7 +10,7 @@ export default function SystemLogs() {
     api
       .get("/logs")
       .then((res) => setLogs(res.data))
-      .catch((err) => console.error(err))
+      .catch((error) => console.error("Log fetch error:", error))
       .finally(() => setLoading(false));
   }, []);
 
@@ -26,7 +26,8 @@ export default function SystemLogs() {
       await api.delete("/logs");
       setLogs([]);
       alert("Logs cleared successfully");
-    } catch (err) {
+    } catch (error) {
+      console.error("Failed to clear logs:", error);
       alert("Failed to clear logs");
     }
   };

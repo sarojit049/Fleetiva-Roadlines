@@ -20,7 +20,8 @@ export default function PostLoad() {
       setCapacity("");
       setFrom("");
       setTo("");
-    } catch (err) {
+    } catch (error) {
+      console.error("Failed to post load:", error);
       alert("Failed to post load. Please check your inputs.");
     }
   };

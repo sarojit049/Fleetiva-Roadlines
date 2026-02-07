@@ -26,8 +26,8 @@ export default function AdminDashboard() {
       setLoads(loadsRes.data);
       setBookings(bookingsRes.data);
       setUsers(usersRes.data);
-    } catch (err) {
-      console.error("Fetch error:", err);
+    } catch (error) {
+      console.error("Fetch error:", error);
     } finally {
       setLoading(false);
     }
@@ -37,7 +37,8 @@ export default function AdminDashboard() {
     try {
       const res = await api.get(`/match/${loadId}`);
       setMatchingTrucks((prev) => ({ ...prev, [loadId]: res.data }));
-    } catch (err) {
+    } catch (error) {
+      console.error("Error finding matches:", error);
       alert("Error finding matches");
     }
   };
@@ -52,7 +53,8 @@ export default function AdminDashboard() {
         delete next[loadId];
         return next;
       });
-    } catch (err) {
+    } catch (error) {
+      console.error("Error creating booking:", error);
       alert("Error creating booking");
     }
   };
@@ -62,7 +64,8 @@ export default function AdminDashboard() {
       await api.post(`/booking/${bookingId}/payment`, { status: "paid" });
       alert("Payment Recorded Successfully!");
       fetchData();
-    } catch (err) {
+    } catch (error) {
+      console.error("Error recording payment:", error);
       alert("Error recording payment");
     }
   };

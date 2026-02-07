@@ -20,7 +20,8 @@ export default function PostTruck() {
       setCapacity("");
       setVehicleType("");
       setCurrentLocation("");
-    } catch (err) {
+    } catch (error) {
+      console.error("Failed to post truck:", error);
       alert("Failed to post truck.");
     }
   };
