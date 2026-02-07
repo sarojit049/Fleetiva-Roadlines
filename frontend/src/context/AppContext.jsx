@@ -9,6 +9,11 @@ export const AppProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
+    if (!auth) {
+      console.warn("Firebase auth unavailable. Skipping auth listener.");
+      return undefined;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
         setUser(firebaseUser);
@@ -23,6 +28,7 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   const logout = async () => {
+    if (!auth) return;
     setLoading(true);
     try {
       await signOut(auth);

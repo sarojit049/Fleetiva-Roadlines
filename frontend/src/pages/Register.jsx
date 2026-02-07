@@ -8,6 +8,7 @@ import { auth } from "../firebase";
 export default function Register() {
   const navigate = useNavigate();
   const { loading, setLoading } = useContext(AppContext);
+  const authUnavailable = !auth;
 
   const [error, setError] = useState("");
 
@@ -22,6 +23,10 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading) return;
+    if (authUnavailable) {
+      setError("Authentication is not configured. Please set Firebase env values.");
+      return;
+    }
 
     setError("");
     setLoading(true);
@@ -47,6 +52,11 @@ export default function Register() {
         </p>
 
         {error && <Toast message={error} />}
+        {authUnavailable && (
+          <p className="text-muted" style={{ textAlign: "center", marginTop: 12 }}>
+            Firebase authentication is not configured for this environment.
+          </p>
+        )}
 
         <form onSubmit={handleSubmit} className="form" style={{ marginTop: 24 }}>
           <input
@@ -101,7 +111,11 @@ export default function Register() {
             <option value="admin">Admin</option>
           </select>
 
-          <button type="submit" disabled={loading} className="btn btn-primary">
+          <button
+            type="submit"
+            disabled={loading || authUnavailable}
+            className="btn btn-primary"
+          >
             {loading ? "Creating account..." : "Register"}
           </button>
         </form>

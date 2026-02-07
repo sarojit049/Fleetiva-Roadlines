@@ -6,8 +6,13 @@ import { safeStorage } from "../utils/storage";
 
 export default function OAuth() {
   const navigate = useNavigate();
+  const authUnavailable = !auth || !googleProvider;
 
   const handleGoogleClick = async () => {
+    if (authUnavailable) {
+      console.warn("Firebase authentication is not configured.");
+      return;
+    }
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const idToken = await result.user.getIdToken();
@@ -21,7 +26,12 @@ export default function OAuth() {
   };
 
   return (
-    <button type="button" onClick={handleGoogleClick} style={styles.button}>
+    <button
+      type="button"
+      onClick={handleGoogleClick}
+      style={styles.button}
+      disabled={authUnavailable}
+    >
       Continue with Google
     </button>
   );

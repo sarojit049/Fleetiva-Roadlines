@@ -8,6 +8,7 @@ import { auth, googleProvider } from "../firebase";
 export default function Login() {
   const navigate = useNavigate();
   const { loading, setLoading } = useContext(AppContext);
+  const authUnavailable = !auth || !googleProvider;
 
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
@@ -18,6 +19,10 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     if (loading) return;
+    if (authUnavailable) {
+      setError("Authentication is not configured. Please set Firebase env values.");
+      return;
+    }
 
     setError("");
     setLoading(true);
@@ -34,6 +39,10 @@ export default function Login() {
 
   const handleGoogleLogin = async () => {
     if (loading) return;
+    if (authUnavailable) {
+      setError("Authentication is not configured. Please set Firebase env values.");
+      return;
+    }
 
     setError("");
     setLoading(true);
@@ -61,6 +70,11 @@ export default function Login() {
         </p>
 
         {error && <Toast message={error} />}
+        {authUnavailable && (
+          <p className="text-muted" style={{ textAlign: "center", marginTop: 12 }}>
+            Firebase authentication is not configured for this environment.
+          </p>
+        )}
 
         <form onSubmit={handleLogin} className="form" style={{ marginTop: 24 }}>
           <input
@@ -85,13 +99,17 @@ export default function Login() {
             }
           />
 
-          <button type="submit" disabled={loading} className="btn btn-primary">
+          <button
+            type="submit"
+            disabled={loading || authUnavailable}
+            className="btn btn-primary"
+          >
             {loading ? "Signing in..." : "Login"}
           </button>
           <button
             type="button"
             onClick={handleGoogleLogin}
-            disabled={loading}
+            disabled={loading || authUnavailable}
             className="btn btn-secondary"
           >
             Continue with Google

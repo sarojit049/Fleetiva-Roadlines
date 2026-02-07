@@ -11,9 +11,19 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({ prompt: "select_account" });
+const hasFirebaseConfig = Object.values(firebaseConfig).every(Boolean);
 
-export { app, auth, googleProvider };
+let app = null;
+let auth = null;
+let googleProvider = null;
+
+if (hasFirebaseConfig) {
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  googleProvider = new GoogleAuthProvider();
+  googleProvider.setCustomParameters({ prompt: "select_account" });
+} else {
+  console.warn("Firebase configuration is missing. Auth features are disabled.");
+}
+
+export { app, auth, googleProvider, hasFirebaseConfig };
