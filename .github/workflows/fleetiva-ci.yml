@@ -1,0 +1,55 @@
+name: Fleetiva CI/CD
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout repo
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2️⃣ Setup Node
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      # 3️⃣ Install root dependencies (if any)
+      - name: Install root deps
+        run: npm install --if-present
+
+      # 4️⃣ Backend install + lint + test
+      - name: Install backend deps
+        run: |
+          cd server
+          npm install
+
+      - name: Backend lint & test
+        run: |
+          cd server
+          npm run lint --if-present
+          npm test --if-present
+
+      # 5️⃣ Frontend install + lint + test
+      - name: Install frontend deps
+        run: |
+          cd client
+          npm install
+
+      - name: Frontend lint & test
+        run: |
+          cd client
+          npm run lint --if-present
+          npm test --if-present
+
+      # 6️⃣ Notify Vercel status (for PR checks)
+      - name: Notify Vercel
+        uses: vercel/repository-dispatch/actions/status@v1
+        with:
+          name: "Vercel - fleetiva: lint"
