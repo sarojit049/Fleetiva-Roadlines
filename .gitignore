@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+.env.local
+
+# OS generated files
+.DS_Store
+Thumbs.db
+__MACOSX/
+
+# Build outputs
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Misplaced files to be ignored/deleted
+backend/Navbar.jsx
+frontend/Navbar.jsx
+frontend/frontend/
+firebase-service-account.json
+.vercel
+.env*.local
