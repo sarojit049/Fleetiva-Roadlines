@@ -6,7 +6,7 @@ const cookieParser = require("cookie-parser");
 const admin = require("firebase-admin");
 
 const errorHandler = require("./middleware/errorHandler");
-const { connectMongo } = require("./config/db2");
+const { connectMongo } = require("./config/db");
 
 require("./config/clients");
 
