@@ -45,31 +45,40 @@ It provides a centralized ecosystem for Logistics Companies (Tenants) to manage 
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-username/logistics-transport-system.git
-   cd logistics-transport-system
+   git clone https://github.com/bonubhavana04/Fleetiva-Roadlines.git
+   cd Fleetiva-Roadlines
    ```
 
 2. **Backend Setup:**
    ```bash
    cd backend
    npm install
-   ```
-   Create a `.env` file based on `.env.example` and fill in your credentials.
-
-   Start the backend:
-   ```bash
+   cp .env.example .env
+   # Edit .env with your credentials
    npm run dev
    ```
 
 3. **Frontend Setup:**
    ```bash
-   cd ../frontend
+   cd frontend
    npm install
-   ```
-   Start the frontend:
-   ```bash
+   cp .env.example .env
+   # Edit .env with your credentials
    npm run dev
    ```
+
+### Quick Start (Development)
+
+```bash
+# Terminal 1 - Backend
+cd backend && npm install && npm run dev
+
+# Terminal 2 - Frontend
+cd frontend && npm install && npm run dev
+```
+
+Backend runs on `http://localhost:5000`  
+Frontend runs on `http://localhost:5173`
 
 ---
 
