@@ -13,5 +13,5 @@ export const getApiBaseUrl = () => {
   const renderServiceUrl = import.meta.env.VITE_RENDER_SERVICE_URL;
   if (renderServiceUrl) return `${normalizeUrl(renderServiceUrl)}/api`;
 
-  return "";
+  return "https://fleetiva-backend.onrender.com/api";
 };
