@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import api from "../api/axios";
-import { getApiBaseUrl } from "../api/baseUrl";
-import { safeStorage } from "../utils/storage";
 
 export default function DriverDashboard() {
   const [bookings, setBookings] = useState([]);
@@ -29,20 +27,6 @@ export default function DriverDashboard() {
       alert("Failed to update status");
     }
   };
-
-  const API_BASE = getApiBaseUrl();
-
-  const downloadBilty = (id) =>
-    window.open(
-      `${API_BASE}/booking/${id}/bilty?token=${safeStorage.get("accessToken")}`,
-      "_blank"
-    );
-
-  const downloadInvoice = (id) =>
-    window.open(
-      `${API_BASE}/booking/${id}/invoice?token=${safeStorage.get("accessToken")}`,
-      "_blank"
-    );
 
   return (
     <div className="page">
@@ -88,18 +72,6 @@ export default function DriverDashboard() {
                       Mark Delivered
                     </button>
                   )}
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => downloadBilty(b._id)}
-                  >
-                    Bilty PDF
-                  </button>
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => downloadInvoice(b._id)}
-                  >
-                    Invoice PDF
-                  </button>
                 </div>
               </div>
             ))

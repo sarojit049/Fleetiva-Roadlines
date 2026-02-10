@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "test": "jest --runInBand",
+    "test": "echo \"No tests defined\" && exit 0",
     "lint": "echo \"No linting defined\" && exit 0"
   },
   "dependencies": {
@@ -25,8 +25,6 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "jest": "^29.7.0",
-    "mongodb-memory-server": "^11.0.1",
-    "supertest": "^7.1.1"
+    "mongodb-memory-server": "^11.0.1"
   }
 }

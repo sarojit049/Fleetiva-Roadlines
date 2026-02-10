@@ -71,8 +71,8 @@ export default function Register() {
       return "Please enter a valid 10-digit phone number.";
     }
 
-    if (password.length < 8) {
-      return "Password must be at least 8 characters.";
+    if (password.length < 6) {
+      return "Password must be at least 6 characters.";
     }
 
     return null;

@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema(
     password: String,
     role: {
       type: String,
-      enum: ["customer", "driver", "admin", "superadmin"],
+      enum: ["customer", "driver", "admin"],
       default: "customer",
     },
     authProvider: {
