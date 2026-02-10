@@ -28,6 +28,7 @@ const allowedOrigins = new Set(
 
 const isOriginAllowed = (origin) => {
   if (!origin) return true;
+  if (allowedOrigins.has('*')) return true;
   if (allowedOrigins.size === 0) return true;
   if (allowedOrigins.has(origin)) return true;
   const previewSuffix = process.env.VERCEL_PREVIEW_SUFFIX;
@@ -108,6 +109,20 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
+});
+
+const io = require('./utils/socketHandler').init(server, {
+  cors: {
+    origin: (origin, callback) => {
+      if (isOriginAllowed(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    methods: ['GET', 'POST'],
+    credentials: true
+  }
 });

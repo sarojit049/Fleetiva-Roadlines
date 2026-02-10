@@ -30,8 +30,9 @@ const validatePassword = (password) => typeof password === 'string' && password.
 
 const firebaseReady = () => admin.apps && admin.apps.length > 0;
 
-const logLoginAttempt = ({ req, user, email, provider, status, reason }) =>
-  LoginLog.create({
+const logLoginAttempt = ({ req, user, email, provider, status, reason }) => {
+  if (process.env.SKIP_MONGO === 'true') return Promise.resolve();
+  return LoginLog.create({
     user: user?._id,
     email: email || user?.email,
     provider,
@@ -39,7 +40,8 @@ const logLoginAttempt = ({ req, user, email, provider, status, reason }) =>
     reason,
     ip: req.ip,
     userAgent: req.get('user-agent'),
-  }).catch(() => {});
+  }).catch(() => { });
+};
 
 router.post('/register', async (req, res) => {
   const { name, email, phone, password, role = 'customer', companyName } = req.body;

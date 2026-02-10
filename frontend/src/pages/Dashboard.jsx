@@ -2,14 +2,32 @@ import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import { useSocket } from "../context/SocketContext";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
+  const socket = useSocket();
 
   useEffect(() => {
     api.get("/booking/customer/bookings").then((res) => setBookings(res.data));
   }, []);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleBookingUpdate = (updatedBooking) => {
+      setBookings((prev) =>
+        prev.map((b) => (b._id === updatedBooking._id ? updatedBooking : b))
+      );
+    };
+
+    socket.on("bookingUpdated", handleBookingUpdate);
+
+    return () => {
+      socket.off("bookingUpdated", handleBookingUpdate);
+    };
+  }, [socket]);
 
   return (
     <div className="page">
