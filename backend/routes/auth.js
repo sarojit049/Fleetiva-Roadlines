@@ -21,15 +21,8 @@ const setAuthCookie = (res, token) => {
   });
 };
 
-const getJwtSecret = () => {
-  if (!process.env.ACCESS_TOKEN_SECRET) {
-    throw new Error('ACCESS_TOKEN_SECRET is not set.');
-  }
-  return process.env.ACCESS_TOKEN_SECRET;
-};
-
 const signToken = (user) =>
-  jwt.sign({ userId: user._id, role: user.role }, getJwtSecret(), {
+  jwt.sign({ userId: user._id, role: user.role }, process.env.ACCESS_TOKEN_SECRET, {
     expiresIn: ACCESS_TOKEN_TTL,
   });
 
@@ -59,7 +52,7 @@ router.post('/register', async (req, res) => {
     return res.status(400).json({ message: 'Password must be at least 8 characters.' });
   }
 
-  if (!['customer', 'driver', 'admin', 'superadmin'].includes(role)) {
+  if (!['customer', 'driver', 'admin'].includes(role)) {
     return res.status(400).json({ message: 'Invalid role.' });
   }
 
@@ -209,7 +202,7 @@ router.post('/firebase/register', async (req, res) => {
   if (!idToken || !name || !phone) {
     return res.status(400).json({ message: 'ID token, name, and phone are required.' });
   }
-  if (!['customer', 'driver', 'admin', 'superadmin'].includes(role)) {
+  if (!['customer', 'driver', 'admin'].includes(role)) {
     return res.status(400).json({ message: 'Invalid role.' });
   }
   if (!firebaseReady()) {

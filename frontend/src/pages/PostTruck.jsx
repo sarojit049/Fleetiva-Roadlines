@@ -9,14 +9,6 @@ export default function PostTruck() {
   const [currentLocation, setCurrentLocation] = useState("");
 
   const postTruck = async () => {
-    if (!vehicleNumber || !capacity || !vehicleType || !currentLocation) {
-      alert("Please fill in all required fields.");
-      return;
-    }
-    if (Number(capacity) <= 0) {
-      alert("Capacity must be greater than 0.");
-      return;
-    }
     try {
       await api.post("/truck/post", {
         vehicleNumber,

@@ -11,21 +11,6 @@ export default function PostLoad() {
   const [to, setTo] = useState("");
 
   const postLoad = async () => {
-    if (
-      !consignorName ||
-      !consigneeName ||
-      !material ||
-      !capacity ||
-      !from ||
-      !to
-    ) {
-      alert("Please fill in all required fields.");
-      return;
-    }
-    if (Number(capacity) <= 0) {
-      alert("Capacity must be greater than 0.");
-      return;
-    }
     try {
       await api.post("/load/post", {
         consignorName,
