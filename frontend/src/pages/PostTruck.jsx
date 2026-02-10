@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Helmet } from "react-helmet-async";
 import api from "../api/axios";
 
 export default function PostTruck() {
@@ -8,6 +9,14 @@ export default function PostTruck() {
   const [currentLocation, setCurrentLocation] = useState("");
 
   const postTruck = async () => {
+    if (!vehicleNumber || !capacity || !vehicleType || !currentLocation) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+    if (Number(capacity) <= 0) {
+      alert("Capacity must be greater than 0.");
+      return;
+    }
     try {
       await api.post("/truck/post", {
         vehicleNumber,
@@ -28,6 +37,10 @@ export default function PostTruck() {
 
   return (
     <div className="page centered">
+      <Helmet>
+        <title>Post Truck - Fleetiva Roadlines</title>
+        <meta name="description" content="List your truck availability to get load assignments." />
+      </Helmet>
       <div className="auth-card" style={{ maxWidth: 520 }}>
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           <h2 className="page-title">Post Available Truck</h2>
@@ -38,8 +51,9 @@ export default function PostTruck() {
         <div className="form">
           <div className="form-row">
             <div className="stack">
-              <label className="label">Vehicle Number</label>
+              <label className="label" htmlFor="vehicleNumber">Vehicle Number</label>
               <input
+                id="vehicleNumber"
                 className="input"
                 placeholder="e.g. MH12AB1234"
                 value={vehicleNumber}
@@ -47,8 +61,9 @@ export default function PostTruck() {
               />
             </div>
             <div className="stack">
-              <label className="label">Capacity (Tons)</label>
+              <label className="label" htmlFor="capacity">Capacity (Tons)</label>
               <input
+                id="capacity"
                 className="input"
                 placeholder="e.g. 12"
                 type="number"
@@ -59,8 +74,9 @@ export default function PostTruck() {
           </div>
           <div className="form-row">
             <div className="stack">
-              <label className="label">Vehicle Type</label>
+              <label className="label" htmlFor="vehicleType">Vehicle Type</label>
               <input
+                id="vehicleType"
                 className="input"
                 placeholder="e.g. 10-Wheeler"
                 value={vehicleType}
@@ -68,8 +84,9 @@ export default function PostTruck() {
               />
             </div>
             <div className="stack">
-              <label className="label">Current Location</label>
+              <label className="label" htmlFor="currentLocation">Current Location</label>
               <input
+                id="currentLocation"
                 className="input"
                 placeholder="e.g. Pune"
                 value={currentLocation}

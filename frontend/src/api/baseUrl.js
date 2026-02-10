@@ -13,5 +13,13 @@ export const getApiBaseUrl = () => {
   const renderServiceUrl = import.meta.env.VITE_RENDER_SERVICE_URL;
   if (renderServiceUrl) return `${normalizeUrl(renderServiceUrl)}/api`;
 
-  return "";
+  if (import.meta.env.DEV) {
+    return "http://localhost:5000/api";
+  }
+
+  if (typeof window !== "undefined") {
+    return `${window.location.origin}/api`;
+  }
+
+  return "/api";
 };

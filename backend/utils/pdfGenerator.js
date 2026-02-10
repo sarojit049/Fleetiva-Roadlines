@@ -1,6 +1,6 @@
 const PDFDocument = require('pdfkit');
 
-exports.generateBiltyPDF = (booking, res) => {
+exports.generateBiltyPDF = (bilty, res) => {
   const doc = new PDFDocument({ margin: 30 });
   const copies = ['Consignor Copy', 'Consignee Copy', 'Driver Copy', 'Transport Copy'];
 
@@ -8,17 +8,27 @@ exports.generateBiltyPDF = (booking, res) => {
     doc.fontSize(20).text('LOGISTICS BILTY', { align: 'center' });
     doc.fontSize(10).text(title, { align: 'right' });
     doc.moveDown();
-    doc.fontSize(12).text(`Bilty No: BIL-${booking._id.toString().slice(-6).toUpperCase()}`);
-    doc.text(`Date: ${new Date().toLocaleDateString()}`);
-    doc.text(`Vehicle No: ${booking.truck.vehicleNumber}`);
-    doc.text(`From: ${booking.from}`);
-    doc.text(`To: ${booking.to}`);
-    doc.text(`Material: ${booking.load.material}`);
-    doc.text(`Weight: ${booking.load.requiredCapacity} Tons`);
+    doc.fontSize(12).text(`LR No: ${bilty.lrNumber}`);
+    doc.text(`Date: ${new Date(bilty.createdAt).toLocaleDateString()}`);
+    doc.text(`Vehicle No: ${bilty.vehicleNumber}`);
+    doc.text(`Driver: ${bilty.driverName} (${bilty.driverPhone})`);
+    doc.text(`From: ${bilty.pickupLocation}`);
+    doc.text(`To: ${bilty.dropLocation}`);
+    doc.text(`Material: ${bilty.materialType}`);
+    doc.text(`Weight: ${bilty.weight} Tons`);
+    doc.text(`Truck Type: ${bilty.truckType}`);
+    doc.text(`Consignor: ${bilty.consignorName}`);
+    doc.text(`Consignee: ${bilty.consigneeName}`);
+    doc.moveDown();
+    doc.text('Freight Details');
+    doc.text(`Freight Amount: Rs. ${bilty.freightAmount.toFixed(2)}`);
+    doc.text(`Advance Paid: Rs. ${bilty.advancePaid.toFixed(2)}`);
+    doc.text(`Balance Amount: Rs. ${bilty.balanceAmount.toFixed(2)}`);
+    doc.text(`Payment Mode: ${bilty.paymentMode.toUpperCase()}`);
     doc.moveDown();
     doc.text('--------------------------------------------------');
     doc.text('Terms & Conditions: Goods carried at owner risk.');
-    
+
     if (index < copies.length - 1) doc.addPage();
   });
 
@@ -28,7 +38,7 @@ exports.generateBiltyPDF = (booking, res) => {
 
 exports.generateInvoicePDF = (booking, res) => {
   const doc = new PDFDocument({ margin: 50 });
-  const total = booking.amount + booking.gstAmount;
+  const total = booking.freightAmount + booking.gstAmount;
 
   doc.fontSize(20).text('GST INVOICE', { align: 'center' });
   doc.moveDown();
@@ -36,12 +46,12 @@ exports.generateInvoicePDF = (booking, res) => {
   doc.text(`Customer: ${booking.customer.name}`);
   doc.text(`Route: ${booking.from} to ${booking.to}`);
   doc.moveDown();
-  
-  doc.text(`Base Amount: Rs. ${booking.amount.toFixed(2)}`);
+
+  doc.text(`Base Amount: Rs. ${booking.freightAmount.toFixed(2)}`);
   doc.text(`GST (12%): Rs. ${booking.gstAmount.toFixed(2)}`);
   doc.text('-----------------------------------');
   doc.fontSize(14).text(`Total Payable: Rs. ${total.toFixed(2)}`, { bold: true });
-  
+
   doc.pipe(res);
   doc.end();
 };

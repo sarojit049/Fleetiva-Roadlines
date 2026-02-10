@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import api from "../api/axios";
 import { getApiBaseUrl } from "../api/baseUrl";
 import { safeStorage } from "../utils/storage";
@@ -7,10 +8,50 @@ export default function AdminDashboard() {
   const [loads, setLoads] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [users, setUsers] = useState([]);
+  const [bilties, setBilties] = useState([]);
   const [matchingTrucks, setMatchingTrucks] = useState({});
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [editingBiltyId, setEditingBiltyId] = useState(null);
+  const [biltyForm, setBiltyForm] = useState({
+    booking: "",
+    lrNumber: "",
+    consignorName: "",
+    consigneeName: "",
+    pickupLocation: "",
+    dropLocation: "",
+    materialType: "",
+    weight: "",
+    truckType: "",
+    driverName: "",
+    driverPhone: "",
+    vehicleNumber: "",
+    freightAmount: "",
+    advancePaid: "",
+    balanceAmount: "",
+    paymentMode: "cash",
+    shipmentStatus: "assigned"
+  });
+  const [newBilty, setNewBilty] = useState({
+    booking: "",
+    lrNumber: "",
+    consignorName: "",
+    consigneeName: "",
+    pickupLocation: "",
+    dropLocation: "",
+    materialType: "",
+    weight: "",
+    truckType: "",
+    driverName: "",
+    driverPhone: "",
+    vehicleNumber: "",
+    freightAmount: "",
+    advancePaid: "",
+    balanceAmount: "",
+    paymentMode: "cash",
+    shipmentStatus: "assigned"
+  });
 
   useEffect(() => {
     fetchData();
@@ -19,14 +60,16 @@ export default function AdminDashboard() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [loadsRes, bookingsRes, usersRes] = await Promise.all([
+      const [loadsRes, bookingsRes, usersRes, biltiesRes] = await Promise.all([
         api.get("/load/available"),
         api.get("/booking/all"),
-        api.get("/users")
+        api.get("/users"),
+        api.get("/bilty")
       ]);
       setLoads(loadsRes.data);
       setBookings(bookingsRes.data);
       setUsers(usersRes.data);
+      setBilties(biltiesRes.data);
     } catch (error) {
       console.error("Fetch error:", error);
     } finally {
@@ -60,15 +103,109 @@ export default function AdminDashboard() {
     }
   };
 
-  const recordPayment = async (bookingId) => {
+  const recordPayment = async (bookingId, status) => {
     try {
-      await api.post(`/booking/${bookingId}/payment`, { status: "paid" });
-      alert("Payment Recorded Successfully!");
+      await api.post(`/booking/${bookingId}/payment`, { status });
+      alert(
+        status === "paid"
+          ? "Payment Recorded Successfully!"
+          : "Payment status reset to pending."
+      );
       fetchData();
     } catch (error) {
       console.error("Error recording payment:", error);
       alert("Error recording payment");
     }
+  };
+
+  const createBilty = async (event) => {
+    event.preventDefault();
+    try {
+      await api.post("/bilty", newBilty);
+      alert("Bilty Created Successfully!");
+      setNewBilty({
+        booking: "",
+        lrNumber: "",
+        consignorName: "",
+        consigneeName: "",
+        pickupLocation: "",
+        dropLocation: "",
+        materialType: "",
+        weight: "",
+        truckType: "",
+        driverName: "",
+        driverPhone: "",
+        vehicleNumber: "",
+        freightAmount: "",
+        advancePaid: "",
+        balanceAmount: "",
+        paymentMode: "cash",
+        shipmentStatus: "assigned"
+      });
+      fetchData();
+    } catch (error) {
+      console.error("Error creating bilty:", error);
+      alert("Error creating bilty");
+    }
+  };
+
+  const startEditBilty = (bilty) => {
+    setEditingBiltyId(bilty._id);
+    setBiltyForm({
+      booking: bilty.booking?._id || "",
+      lrNumber: bilty.lrNumber || "",
+      consignorName: bilty.consignorName || "",
+      consigneeName: bilty.consigneeName || "",
+      pickupLocation: bilty.pickupLocation || "",
+      dropLocation: bilty.dropLocation || "",
+      materialType: bilty.materialType || "",
+      weight: bilty.weight || "",
+      truckType: bilty.truckType || "",
+      driverName: bilty.driverName || "",
+      driverPhone: bilty.driverPhone || "",
+      vehicleNumber: bilty.vehicleNumber || "",
+      freightAmount: bilty.freightAmount || "",
+      advancePaid: bilty.advancePaid || "",
+      balanceAmount: bilty.balanceAmount || "",
+      paymentMode: bilty.paymentMode || "cash",
+      shipmentStatus: bilty.shipmentStatus || "assigned"
+    });
+  };
+
+  const updateBilty = async (event) => {
+    event.preventDefault();
+    try {
+      const { booking: _booking, ...payload } = biltyForm;
+
+      await api.patch(`/bilty/${editingBiltyId}`, payload);
+      alert("Bilty Updated Successfully!");
+      setEditingBiltyId(null);
+      fetchData();
+    } catch (error) {
+      console.error("Error updating bilty:", error);
+      alert("Error updating bilty");
+    }
+  };
+
+  const deleteBilty = async (biltyId) => {
+    if (!window.confirm("Delete this bilty record?")) return;
+    try {
+      await api.delete(`/bilty/${biltyId}`);
+      alert("Bilty Deleted Successfully!");
+      fetchData();
+    } catch (error) {
+      console.error("Error deleting bilty:", error);
+      alert("Error deleting bilty");
+    }
+  };
+
+  const cancelEditBilty = () => {
+    setEditingBiltyId(null);
+  };
+
+  const handleBiltyChange = (setter) => (event) => {
+    const { name, value } = event.target;
+    setter((prev) => ({ ...prev, [name]: value }));
   };
 
   const API_BASE = getApiBaseUrl();
@@ -98,6 +235,10 @@ export default function AdminDashboard() {
 
   return (
     <div className="page">
+      <Helmet>
+        <title>Admin Dashboard - Fleetiva Roadlines</title>
+        <meta name="description" content="Administer users, match loads with trucks, and manage bookings." />
+      </Helmet>
       <div className="page-content">
         <div className="page-header">
           <div>
@@ -202,13 +343,12 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <span
-                  className={`tag ${
-                    b.status === "delivered"
-                      ? "success"
-                      : b.status === "matched"
+                  className={`tag ${b.status === "delivered"
+                    ? "success"
+                    : b.status === "matched"
                       ? "info"
                       : "warning"
-                  }`}
+                    }`}
                 >
                   {b.status}
                 </span>
@@ -220,12 +360,354 @@ export default function AdminDashboard() {
                 <button className="btn btn-secondary" onClick={() => downloadInvoice(b._id)}>
                   Download Invoice
                 </button>
-                {b.paymentStatus !== "paid" && (
-                  <button className="btn btn-outline" onClick={() => recordPayment(b._id)}>
-                    Record Payment
+                {b.paymentStatus !== "paid" ? (
+                  <button
+                    className="btn btn-outline"
+                    onClick={() => recordPayment(b._id, "paid")}
+                  >
+                    Mark Paid
+                  </button>
+                ) : (
+                  <button
+                    className="btn btn-outline"
+                    onClick={() => recordPayment(b._id, "pending")}
+                  >
+                    Mark Unpaid
                   </button>
                 )}
               </div>
+            </div>
+          ))}
+        </section>
+
+        <section className="stack">
+          <h3 className="section-title">Bilty Management</h3>
+          <div className="card">
+            <form className="stack" onSubmit={createBilty}>
+              <div className="toolbar">
+                <input
+                  className="input"
+                  name="booking"
+                  placeholder="Booking ID"
+                  value={newBilty.booking}
+                  onChange={handleBiltyChange(setNewBilty)}
+                />
+                <input
+                  className="input"
+                  name="lrNumber"
+                  placeholder="LR Number (optional)"
+                  value={newBilty.lrNumber}
+                  onChange={handleBiltyChange(setNewBilty)}
+                />
+              </div>
+              <div className="toolbar">
+                <input
+                  className="input"
+                  name="consignorName"
+                  placeholder="Consignor Name"
+                  value={newBilty.consignorName}
+                  onChange={handleBiltyChange(setNewBilty)}
+                />
+                <input
+                  className="input"
+                  name="consigneeName"
+                  placeholder="Consignee Name"
+                  value={newBilty.consigneeName}
+                  onChange={handleBiltyChange(setNewBilty)}
+                />
+              </div>
+              <div className="toolbar">
+                <input
+                  className="input"
+                  name="pickupLocation"
+                  placeholder="Pickup Location"
+                  value={newBilty.pickupLocation}
+                  onChange={handleBiltyChange(setNewBilty)}
+                />
+                <input
+                  className="input"
+                  name="dropLocation"
+                  placeholder="Drop Location"
+                  value={newBilty.dropLocation}
+                  onChange={handleBiltyChange(setNewBilty)}
+                />
+              </div>
+              <div className="toolbar">
+                <input
+                  className="input"
+                  name="materialType"
+                  placeholder="Material Type"
+                  value={newBilty.materialType}
+                  onChange={handleBiltyChange(setNewBilty)}
+                />
+                <input
+                  className="input"
+                  name="weight"
+                  type="number"
+                  placeholder="Weight (T)"
+                  value={newBilty.weight}
+                  onChange={handleBiltyChange(setNewBilty)}
+                />
+              </div>
+              <div className="toolbar">
+                <input
+                  className="input"
+                  name="truckType"
+                  placeholder="Truck Type"
+                  value={newBilty.truckType}
+                  onChange={handleBiltyChange(setNewBilty)}
+                />
+                <input
+                  className="input"
+                  name="vehicleNumber"
+                  placeholder="Vehicle Number"
+                  value={newBilty.vehicleNumber}
+                  onChange={handleBiltyChange(setNewBilty)}
+                />
+              </div>
+              <div className="toolbar">
+                <input
+                  className="input"
+                  name="driverName"
+                  placeholder="Driver Name"
+                  value={newBilty.driverName}
+                  onChange={handleBiltyChange(setNewBilty)}
+                />
+                <input
+                  className="input"
+                  name="driverPhone"
+                  placeholder="Driver Phone"
+                  value={newBilty.driverPhone}
+                  onChange={handleBiltyChange(setNewBilty)}
+                />
+              </div>
+              <div className="toolbar">
+                <input
+                  className="input"
+                  name="freightAmount"
+                  type="number"
+                  placeholder="Freight Amount"
+                  value={newBilty.freightAmount}
+                  onChange={handleBiltyChange(setNewBilty)}
+                />
+                <input
+                  className="input"
+                  name="advancePaid"
+                  type="number"
+                  placeholder="Advance Paid"
+                  value={newBilty.advancePaid}
+                  onChange={handleBiltyChange(setNewBilty)}
+                />
+                <input
+                  className="input"
+                  name="balanceAmount"
+                  type="number"
+                  placeholder="Balance Amount"
+                  value={newBilty.balanceAmount}
+                  onChange={handleBiltyChange(setNewBilty)}
+                />
+              </div>
+              <div className="toolbar">
+                <select
+                  className="select"
+                  name="paymentMode"
+                  value={newBilty.paymentMode}
+                  onChange={handleBiltyChange(setNewBilty)}
+                >
+                  <option value="cash">Cash</option>
+                  <option value="bank">Bank</option>
+                  <option value="upi">UPI</option>
+                  <option value="card">Card</option>
+                </select>
+                <select
+                  className="select"
+                  name="shipmentStatus"
+                  value={newBilty.shipmentStatus}
+                  onChange={handleBiltyChange(setNewBilty)}
+                >
+                  <option value="assigned">Assigned</option>
+                  <option value="in-transit">In Transit</option>
+                  <option value="delivered">Delivered</option>
+                </select>
+                <button className="btn btn-primary" type="submit">
+                  Create Bilty
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {bilties.map((bilty) => (
+            <div key={bilty._id} className="card">
+              <div className="page-header">
+                <div>
+                  <p style={{ margin: 0, fontWeight: 600 }}>
+                    Bilty {bilty.lrNumber}
+                  </p>
+                  <p className="text-muted" style={{ margin: "6px 0 0" }}>
+                    Booking #{bilty.booking?._id?.slice(-6)} • Status: {bilty.shipmentStatus}
+                  </p>
+                </div>
+                <div className="toolbar">
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => startEditBilty(bilty)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="btn btn-outline"
+                    onClick={() => deleteBilty(bilty._id)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+
+              {editingBiltyId === bilty._id && (
+                <form className="stack" onSubmit={updateBilty} style={{ marginTop: 16 }}>
+                  <div className="toolbar">
+                    <input
+                      className="input"
+                      name="lrNumber"
+                      placeholder="LR Number"
+                      value={biltyForm.lrNumber}
+                      onChange={handleBiltyChange(setBiltyForm)}
+                    />
+                    <input
+                      className="input"
+                      name="consignorName"
+                      placeholder="Consignor Name"
+                      value={biltyForm.consignorName}
+                      onChange={handleBiltyChange(setBiltyForm)}
+                    />
+                    <input
+                      className="input"
+                      name="consigneeName"
+                      placeholder="Consignee Name"
+                      value={biltyForm.consigneeName}
+                      onChange={handleBiltyChange(setBiltyForm)}
+                    />
+                  </div>
+                  <div className="toolbar">
+                    <input
+                      className="input"
+                      name="pickupLocation"
+                      placeholder="Pickup Location"
+                      value={biltyForm.pickupLocation}
+                      onChange={handleBiltyChange(setBiltyForm)}
+                    />
+                    <input
+                      className="input"
+                      name="dropLocation"
+                      placeholder="Drop Location"
+                      value={biltyForm.dropLocation}
+                      onChange={handleBiltyChange(setBiltyForm)}
+                    />
+                    <input
+                      className="input"
+                      name="materialType"
+                      placeholder="Material Type"
+                      value={biltyForm.materialType}
+                      onChange={handleBiltyChange(setBiltyForm)}
+                    />
+                  </div>
+                  <div className="toolbar">
+                    <input
+                      className="input"
+                      name="weight"
+                      type="number"
+                      placeholder="Weight (T)"
+                      value={biltyForm.weight}
+                      onChange={handleBiltyChange(setBiltyForm)}
+                    />
+                    <input
+                      className="input"
+                      name="truckType"
+                      placeholder="Truck Type"
+                      value={biltyForm.truckType}
+                      onChange={handleBiltyChange(setBiltyForm)}
+                    />
+                    <input
+                      className="input"
+                      name="vehicleNumber"
+                      placeholder="Vehicle Number"
+                      value={biltyForm.vehicleNumber}
+                      onChange={handleBiltyChange(setBiltyForm)}
+                    />
+                  </div>
+                  <div className="toolbar">
+                    <input
+                      className="input"
+                      name="driverName"
+                      placeholder="Driver Name"
+                      value={biltyForm.driverName}
+                      onChange={handleBiltyChange(setBiltyForm)}
+                    />
+                    <input
+                      className="input"
+                      name="driverPhone"
+                      placeholder="Driver Phone"
+                      value={biltyForm.driverPhone}
+                      onChange={handleBiltyChange(setBiltyForm)}
+                    />
+                  </div>
+                  <div className="toolbar">
+                    <input
+                      className="input"
+                      name="freightAmount"
+                      type="number"
+                      placeholder="Freight Amount"
+                      value={biltyForm.freightAmount}
+                      onChange={handleBiltyChange(setBiltyForm)}
+                    />
+                    <input
+                      className="input"
+                      name="advancePaid"
+                      type="number"
+                      placeholder="Advance Paid"
+                      value={biltyForm.advancePaid}
+                      onChange={handleBiltyChange(setBiltyForm)}
+                    />
+                    <input
+                      className="input"
+                      name="balanceAmount"
+                      type="number"
+                      placeholder="Balance Amount"
+                      value={biltyForm.balanceAmount}
+                      onChange={handleBiltyChange(setBiltyForm)}
+                    />
+                  </div>
+                  <div className="toolbar">
+                    <select
+                      className="select"
+                      name="paymentMode"
+                      value={biltyForm.paymentMode}
+                      onChange={handleBiltyChange(setBiltyForm)}
+                    >
+                      <option value="cash">Cash</option>
+                      <option value="bank">Bank</option>
+                      <option value="upi">UPI</option>
+                      <option value="card">Card</option>
+                    </select>
+                    <select
+                      className="select"
+                      name="shipmentStatus"
+                      value={biltyForm.shipmentStatus}
+                      onChange={handleBiltyChange(setBiltyForm)}
+                    >
+                      <option value="assigned">Assigned</option>
+                      <option value="in-transit">In Transit</option>
+                      <option value="delivered">Delivered</option>
+                    </select>
+                    <button className="btn btn-primary" type="submit">
+                      Save Changes
+                    </button>
+                    <button className="btn btn-outline" type="button" onClick={cancelEditBilty}>
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           ))}
         </section>

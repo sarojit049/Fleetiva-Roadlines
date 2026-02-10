@@ -7,8 +7,8 @@ import Navbar from "./components/Navbar";
 import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import AdminDashboard from "./pages/AdminDashboard";
-import Dashboard from "./pages/Dashboard";
+import AdminDashboardPage from "./pages/AdminDashboard";
+import CustomerDashboard from "./pages/CustomerDashboard";
 import DriverDashboard from "./pages/DriverDashboard";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import SystemLogs from "./pages/SystemLogs";
@@ -17,20 +17,21 @@ import PostTruck from "./pages/PostTruck";
 import ForgotPassword from "./pages/ForgotPassword";
 
 const ProtectedRoute = ({ children, role }) => {
-  const { user } = useContext(AppContext);
+  const { user, loading } = useContext(AppContext);
   const currentRole = user?.role || safeStorage.get("role");
 
+  if (loading) return null;
   if (!user) return <Navigate to="/login" />;
   if (role && currentRole && currentRole !== role) return <Navigate to="/" />;
 
   return children;
 };
 
-/* ================= ROOT REDIRECT ================= */
 const RootRedirect = () => {
-  const { user } = useContext(AppContext);
+  const { user, loading } = useContext(AppContext);
   const role = user?.role || safeStorage.get("role");
 
+  if (loading) return null;
   if (!user) return <Navigate to="/login" />;
 
   if (role === "superadmin") return <Navigate to="/superadmin" />;
@@ -39,7 +40,6 @@ const RootRedirect = () => {
   return <Navigate to="/dashboard" />;
 };
 
-/* ================= APP ================= */
 const App = () => {
   const { user } = useContext(AppContext);
 
@@ -51,22 +51,19 @@ const App = () => {
 
       <Routes>
         <Route path="/" element={user ? <RootRedirect /> : <LandingPage />} />
-        {/* Public */}
         <Route path="/login" element={user ? <RootRedirect /> : <Login />} />
         <Route path="/register" element={user ? <RootRedirect /> : <Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
-        {/* Admin */}
         <Route
           path="/admin"
           element={
             <ProtectedRoute role="admin">
-              <AdminDashboard />
+              <AdminDashboardPage />
             </ProtectedRoute>
           }
         />
 
-        {/* Super Admin */}
         <Route
           path="/superadmin"
           element={
@@ -84,7 +81,6 @@ const App = () => {
           }
         />
 
-        {/* Driver */}
         <Route
           path="/driver"
           element={
@@ -94,12 +90,11 @@ const App = () => {
           }
         />
 
-        {/* Customer */}
         <Route
           path="/dashboard"
           element={
             <ProtectedRoute role="customer">
-              <Dashboard />
+              <CustomerDashboard />
             </ProtectedRoute>
           }
         />

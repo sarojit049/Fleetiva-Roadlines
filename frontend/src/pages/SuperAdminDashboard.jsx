@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import api from "../api/axios";
 
 export default function SuperAdminDashboard() {
@@ -33,6 +34,10 @@ export default function SuperAdminDashboard() {
 
   return (
     <div className="page">
+      <Helmet>
+        <title>Super Admin Dashboard - Fleetiva Roadlines</title>
+        <meta name="description" content="Manage tenants, subscriptions, and system-wide settings." />
+      </Helmet>
       <div className="page-content">
         <div className="page-header">
           <div>

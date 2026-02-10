@@ -26,6 +26,10 @@ export default function ForgotPassword() {
 
   const handleRequest = async (e) => {
     e.preventDefault();
+    if (!/^\d{10}$/.test(phone)) {
+      alert("Enter a valid 10-digit phone number.");
+      return;
+    }
     setLoading(true);
     try {
       await api.post("/auth/forgot-password", { phone });
@@ -39,6 +43,14 @@ export default function ForgotPassword() {
 
   const handleReset = async (e) => {
     e.preventDefault();
+    if (!/^\d{6}$/.test(otp)) {
+      alert("Enter a valid 6-digit OTP.");
+      return;
+    }
+    if (newPassword.length < 8) {
+      alert("Password must be at least 8 characters.");
+      return;
+    }
     setLoading(true);
     try {
       await api.post("/auth/reset-password", { phone, otp, newPassword });

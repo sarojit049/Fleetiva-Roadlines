@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import api from "../api/axios";
+import { getApiBaseUrl } from "../api/baseUrl";
+import { safeStorage } from "../utils/storage";
 
 export default function DriverDashboard() {
   const [bookings, setBookings] = useState([]);
@@ -7,7 +10,7 @@ export default function DriverDashboard() {
 
   const fetchBookings = () =>
     api
-      .get("/driver/bookings")
+      .get("/booking/driver/bookings")
       .then((res) => setBookings(res.data))
       .catch((error) => console.error("Fetch error:", error))
       .finally(() => setLoading(false));
@@ -27,8 +30,26 @@ export default function DriverDashboard() {
     }
   };
 
+  const API_BASE = getApiBaseUrl();
+
+  const downloadBilty = (id) =>
+    window.open(
+      `${API_BASE}/booking/${id}/bilty?token=${safeStorage.get("accessToken")}`,
+      "_blank"
+    );
+
+  const downloadInvoice = (id) =>
+    window.open(
+      `${API_BASE}/booking/${id}/invoice?token=${safeStorage.get("accessToken")}`,
+      "_blank"
+    );
+
   return (
     <div className="page">
+      <Helmet>
+        <title>Driver Dashboard - Fleetiva Roadlines</title>
+        <meta name="description" content="View assigned trips and update delivery status." />
+      </Helmet>
       <div className="page-content">
         <div className="page-header">
           <div>
@@ -67,6 +88,18 @@ export default function DriverDashboard() {
                       Mark Delivered
                     </button>
                   )}
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => downloadBilty(b._id)}
+                  >
+                    Bilty PDF
+                  </button>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => downloadInvoice(b._id)}
+                  >
+                    Invoice PDF
+                  </button>
                 </div>
               </div>
             ))

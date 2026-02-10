@@ -7,6 +7,7 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "test": "jest --detectOpenHandles",
+    "test": "jest --runInBand",
     "lint": "echo \"No linting defined\" && exit 0"
   },
   "dependencies": {
@@ -34,5 +35,8 @@
     "setupFilesAfterEnv": [
       "./tests/setup.js"
     ]
+    "jest": "^29.7.0",
+    "mongodb-memory-server": "^11.0.1",
+    "supertest": "^7.1.1"
   }
 }
