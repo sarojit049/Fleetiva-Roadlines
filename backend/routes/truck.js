@@ -26,6 +26,11 @@ router.post('/post', authenticate, authorize('driver'), async (req, res) => {
   res.status(201).json(truck);
 });
 
+router.get('/my-trucks', authenticate, authorize('driver', 'admin', 'superadmin'), async (req, res) => {
+  const trucks = await Truck.find({ driver: req.user.userId }).sort({ createdAt: -1 });
+  res.json(trucks);
+});
+
 router.get('/available', authenticate, authorize('admin'), async (req, res) => {
   const trucks = await Truck.find({ isAvailable: true }).sort({ createdAt: -1 });
   res.json(trucks);

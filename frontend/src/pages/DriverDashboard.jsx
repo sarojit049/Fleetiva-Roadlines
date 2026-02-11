@@ -6,12 +6,18 @@ import { safeStorage } from "../utils/storage";
 
 export default function DriverDashboard() {
   const [bookings, setBookings] = useState([]);
+  const [trucks, setTrucks] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchBookings = () =>
-    api
-      .get("/booking/driver/bookings")
-      .then((res) => setBookings(res.data))
+    Promise.all([
+      api.get("/booking/driver/bookings"),
+      api.get("/truck/my-trucks"),
+    ])
+      .then(([bookingsRes, trucksRes]) => {
+        setBookings(bookingsRes.data);
+        setTrucks(trucksRes.data);
+      })
       .catch((error) => console.error("Fetch error:", error))
       .finally(() => setLoading(false));
 
@@ -58,8 +64,45 @@ export default function DriverDashboard() {
               Manage assigned trips and update delivery statuses quickly.
             </p>
           </div>
+          <button className="btn btn-primary" onClick={() => window.location.href = '/post-truck'}>
+            Post Truck Availability
+          </button>
         </div>
+
         <section className="stack">
+          <h3 className="section-title">Your Posted Trucks</h3>
+          {loading ? (
+            <p className="text-muted">Loading trucks...</p>
+          ) : trucks.length === 0 ? (
+            <div className="card">
+              <p style={{ margin: 0, fontWeight: 600 }}>No trucks posted</p>
+              <p className="text-muted" style={{ margin: "6px 0 0" }}>
+                Post a truck to get assignments.
+              </p>
+            </div>
+          ) : (
+            trucks.map((t) => (
+              <div key={t._id} className="card">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
+                  <div>
+                    <h4 style={{ margin: "0 0 4px" }}>{t.vehicleNumber}</h4>
+                    <p className="text-muted" style={{ margin: 0 }}>
+                      {t.vehicleType} • {t.currentLocation}
+                    </p>
+                    <p className="text-muted" style={{ fontSize: "0.9rem", marginTop: 4 }}>
+                      Capacity: {t.capacity} Tons
+                    </p>
+                  </div>
+                  <span className={`tag ${t.isAvailable ? "success" : "warning"}`}>
+                    {t.isAvailable ? "Available" : "Busy"}
+                  </span>
+                </div>
+              </div>
+            ))
+          )}
+        </section>
+
+        <section className="stack" style={{ marginTop: 32 }}>
           {loading ? (
             <p className="text-muted">Loading bookings...</p>
           ) : bookings.length > 0 ? (

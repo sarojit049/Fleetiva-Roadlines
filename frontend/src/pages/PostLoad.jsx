@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import api from "../api/axios";
 
 export default function PostLoad() {
+  const navigate = useNavigate();
   const [consignorName, setConsignorName] = useState("");
   const [consigneeName, setConsigneeName] = useState("");
   const [material, setMaterial] = useState("");
@@ -42,6 +44,7 @@ export default function PostLoad() {
       setCapacity("");
       setFrom("");
       setTo("");
+      navigate("/dashboard");
     } catch (error) {
       console.error("Failed to post load:", error);
       alert("Failed to post load. Please check your inputs.");
