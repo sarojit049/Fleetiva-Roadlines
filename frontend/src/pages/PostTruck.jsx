@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import api from "../api/axios";
+import { safeStorage } from "../utils/storage";
 
 export default function PostTruck() {
   const navigate = useNavigate();
@@ -31,7 +32,15 @@ export default function PostTruck() {
       setCapacity("");
       setVehicleType("");
       setCurrentLocation("");
-      navigate("/dashboard");
+      setVehicleType("");
+      setCurrentLocation("");
+
+      const role = safeStorage.get("role");
+      if (role === "driver") {
+        navigate("/driver");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (error) {
       console.error("Failed to post truck:", error);
       alert("Failed to post truck.");
