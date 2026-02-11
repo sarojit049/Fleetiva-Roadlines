@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import api from "../api/axios";
 
 export default function PostTruck() {
+  const navigate = useNavigate();
   const [vehicleNumber, setVehicleNumber] = useState("");
   const [capacity, setCapacity] = useState("");
   const [vehicleType, setVehicleType] = useState("");
@@ -29,6 +31,7 @@ export default function PostTruck() {
       setCapacity("");
       setVehicleType("");
       setCurrentLocation("");
+      navigate("/dashboard");
     } catch (error) {
       console.error("Failed to post truck:", error);
       alert("Failed to post truck.");

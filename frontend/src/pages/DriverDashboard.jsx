@@ -1,24 +1,33 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import api from "../api/axios";
 import { getApiBaseUrl } from "../api/baseUrl";
 import { safeStorage } from "../utils/storage";
 
 export default function DriverDashboard() {
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [trucks, setTrucks] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchBookings = () =>
-    Promise.all([
+    Promise.allSettled([
       api.get("/booking/driver/bookings"),
       api.get("/truck/my-trucks"),
     ])
       .then(([bookingsRes, trucksRes]) => {
-        setBookings(bookingsRes.data);
-        setTrucks(trucksRes.data);
+        if (bookingsRes.status === "fulfilled") {
+          setBookings(bookingsRes.value.data);
+        } else {
+          console.error("Bookings fetch error:", bookingsRes.reason);
+        }
+        if (trucksRes.status === "fulfilled") {
+          setTrucks(trucksRes.value.data);
+        } else {
+          console.error("Trucks fetch error:", trucksRes.reason);
+        }
       })
-      .catch((error) => console.error("Fetch error:", error))
       .finally(() => setLoading(false));
 
   useEffect(() => {
@@ -64,7 +73,7 @@ export default function DriverDashboard() {
               Manage assigned trips and update delivery statuses quickly.
             </p>
           </div>
-          <button className="btn btn-primary" onClick={() => window.location.href = '/post-truck'}>
+          <button className="btn btn-primary" onClick={() => navigate('/post-truck')}>
             Post Truck Availability
           </button>
         </div>

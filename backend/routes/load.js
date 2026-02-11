@@ -12,14 +12,15 @@ router.post('/post', authenticate, authorize('customer', 'driver', 'admin', 'sup
     return res.status(400).json({ message: 'All load fields are required.' });
   }
 
-  if (Number(requiredCapacity) <= 0) {
-    return res.status(400).json({ message: 'Capacity must be greater than 0.' });
+  const capacity = Number(requiredCapacity);
+  if (!Number.isFinite(capacity) || capacity <= 0) {
+    return res.status(400).json({ message: 'Capacity must be a valid number greater than 0.' });
   }
 
   const load = await Load.create({
     customer: req.user.userId,
     material,
-    requiredCapacity: Number(requiredCapacity),
+    requiredCapacity: capacity,
     from,
     to,
     consignorName,

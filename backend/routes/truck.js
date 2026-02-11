@@ -12,14 +12,15 @@ router.post('/post', authenticate, authorize('driver'), asyncHandler(async (req,
     return res.status(400).json({ message: 'Vehicle details are required.' });
   }
 
-  if (Number(capacity) <= 0) {
-    return res.status(400).json({ message: 'Capacity must be greater than 0.' });
+  const truckCapacity = Number(capacity);
+  if (!Number.isFinite(truckCapacity) || truckCapacity <= 0) {
+    return res.status(400).json({ message: 'Capacity must be a valid number greater than 0.' });
   }
 
   const truck = await Truck.create({
     driver: req.user.userId,
     vehicleNumber,
-    capacity: Number(capacity),
+    capacity: truckCapacity,
     vehicleType,
     currentLocation,
   });

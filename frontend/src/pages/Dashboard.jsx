@@ -12,15 +12,22 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
+    Promise.allSettled([
       api.get("/booking/customer/bookings"),
       api.get("/load/my-loads"),
     ])
       .then(([bookingsRes, loadsRes]) => {
-        setBookings(bookingsRes.data);
-        setLoads(loadsRes.data);
+        if (bookingsRes.status === "fulfilled") {
+          setBookings(bookingsRes.value.data);
+        } else {
+          console.error("Bookings fetch error:", bookingsRes.reason);
+        }
+        if (loadsRes.status === "fulfilled") {
+          setLoads(loadsRes.value.data);
+        } else {
+          console.error("Loads fetch error:", loadsRes.reason);
+        }
       })
-      .catch((error) => console.error("Fetch error:", error))
       .finally(() => setLoading(false));
   }, []);
 
