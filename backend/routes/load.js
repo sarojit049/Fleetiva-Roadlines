@@ -1,10 +1,11 @@
 const express = require('express');
 const Load = require('../models/Load');
 const { authenticate, authorize } = require('../middleware/combinedAuth');
+const asyncHandler = require('../utils/asyncHandler');
 
 const router = express.Router();
 
-router.post('/post', authenticate, authorize('customer', 'driver', 'admin', 'superadmin'), async (req, res) => {
+router.post('/post', authenticate, authorize('customer', 'driver', 'admin', 'superadmin'), asyncHandler(async (req, res) => {
   const { material, requiredCapacity, from, to, consignorName, consigneeName } = req.body;
 
   if (!material || !from || !to || !consignorName || !consigneeName) {
@@ -26,16 +27,16 @@ router.post('/post', authenticate, authorize('customer', 'driver', 'admin', 'sup
   });
 
   res.status(201).json(load);
-});
+}));
 
-router.get('/my-loads', authenticate, authorize('customer', 'driver', 'admin', 'superadmin'), async (req, res) => {
+router.get('/my-loads', authenticate, authorize('customer', 'driver', 'admin', 'superadmin'), asyncHandler(async (req, res) => {
   const loads = await Load.find({ customer: req.user.userId }).sort({ createdAt: -1 });
   res.json(loads);
-});
+}));
 
-router.get('/available', authenticate, authorize('admin'), async (req, res) => {
+router.get('/available', authenticate, authorize('admin'), asyncHandler(async (req, res) => {
   const loads = await Load.find().sort({ createdAt: -1 });
   res.json(loads);
-});
+}));
 
 module.exports = router;
