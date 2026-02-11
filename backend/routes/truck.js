@@ -2,25 +2,25 @@ const express = require('express');
 const Truck = require('../models/Truck');
 const { authenticate, authorize } = require('../middleware/combinedAuth');
 const asyncHandler = require('../utils/asyncHandler');
+const { postTruckSchema } = require('../validations/truckValidation');
 
 const router = express.Router();
 
 router.post('/post', authenticate, authorize('driver'), asyncHandler(async (req, res) => {
-  const { vehicleNumber, capacity, vehicleType, currentLocation } = req.body;
-
-  if (!vehicleNumber || !vehicleType || !currentLocation) {
-    return res.status(400).json({ message: 'Vehicle details are required.' });
+  const { error, value } = postTruckSchema.validate(req.body, { abortEarly: false });
+  if (error) {
+    return res.status(400).json({
+      message: 'Validation failed',
+      errors: error.details.map(detail => ({ field: detail.path.join('.'), message: detail.message }))
+    });
   }
 
-  const truckCapacity = Number(capacity);
-  if (!Number.isFinite(truckCapacity) || truckCapacity <= 0) {
-    return res.status(400).json({ message: 'Capacity must be a valid number greater than 0.' });
-  }
+  const { vehicleNumber, capacity, vehicleType, currentLocation } = value;
 
   const truck = await Truck.create({
     driver: req.user.userId,
     vehicleNumber,
-    capacity: truckCapacity,
+    capacity,
     vehicleType,
     currentLocation,
   });

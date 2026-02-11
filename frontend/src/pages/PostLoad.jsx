@@ -44,10 +44,13 @@ export default function PostLoad() {
       setCapacity("");
       setFrom("");
       setTo("");
+      // Feature: Redirect to dashboard after success
       navigate("/dashboard");
-    } catch (error) {
-      console.error("Failed to post load:", error);
-      alert("Failed to post load. Please check your inputs.");
+
+    } catch (err) {
+      // Main: Better error handling
+      console.log("ERROR:", err.response?.data);
+      alert(err.response?.data?.message || "Load post failed");
     }
   };
 

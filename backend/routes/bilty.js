@@ -3,6 +3,7 @@ const Bilty = require('../models/Bilty');
 const Booking = require('../models/Booking');
 const BillingRecord = require('../models/BillingRecord');
 const { authenticate, authorize } = require('../middleware/combinedAuth');
+const { createBiltySchema, updateBiltySchema } = require('../validations/biltyValidation');
 
 const router = express.Router();
 
@@ -47,29 +48,15 @@ router.get('/', authenticate, authorize('admin'), async (req, res) => {
 });
 
 router.post('/', authenticate, authorize('admin'), async (req, res) => {
-  const {
-    booking: bookingId,
-    lrNumber,
-    consignorName,
-    consigneeName,
-    pickupLocation,
-    dropLocation,
-    materialType,
-    weight,
-    truckType,
-    driverName,
-    driverPhone,
-    vehicleNumber,
-    freightAmount,
-    advancePaid,
-    balanceAmount,
-    paymentMode,
-    shipmentStatus,
-  } = req.body;
-
-  if (!bookingId) {
-    return res.status(400).json({ message: 'Booking is required.' });
+  const { error, value } = createBiltySchema.validate(req.body, { abortEarly: false });
+  if (error) {
+    return res.status(400).json({
+      message: 'Validation failed',
+      errors: error.details.map(detail => ({ field: detail.path.join('.'), message: detail.message }))
+    });
   }
+
+  const { booking: bookingId, lrNumber, ...rest } = value;
 
   const booking = await Booking.findById(bookingId);
   if (!booking) {
@@ -86,21 +73,7 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
   const bilty = await Bilty.create({
     booking: bookingId,
     lrNumber: finalLRNumber,
-    consignorName,
-    consigneeName,
-    pickupLocation,
-    dropLocation,
-    materialType,
-    weight,
-    truckType,
-    driverName,
-    driverPhone,
-    vehicleNumber,
-    freightAmount,
-    advancePaid,
-    balanceAmount,
-    paymentMode,
-    shipmentStatus,
+    ...rest,
   });
 
   await BillingRecord.findOneAndUpdate(
@@ -113,12 +86,20 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
 });
 
 router.patch('/:id', authenticate, authorize('admin'), async (req, res) => {
-  const updates = Object.entries(req.body).reduce((acc, [key, value]) => {
-    if (allowedUpdateFields.has(key)) {
-      acc[key] = value;
+  const { error, value } = updateBiltySchema.validate(req.body, { abortEarly: false });
+  if (error) {
+    return res.status(400).json({
+      message: 'Validation failed',
+      errors: error.details.map(detail => ({ field: detail.path.join('.'), message: detail.message }))
+    });
+  }
+
+  const updates = {};
+  for (const key of allowedUpdateFields) {
+    if (value[key] !== undefined) {
+      updates[key] = value[key];
     }
-    return acc;
-  }, {});
+  }
 
   if (Object.keys(updates).length === 0) {
     return res.status(400).json({ message: 'No valid fields to update.' });

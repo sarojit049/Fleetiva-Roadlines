@@ -5,6 +5,7 @@ const admin = require('firebase-admin');
 const User = require('../models/User');
 const LoginLog = require('../models/LoginLog');
 const { twilioClient, redisClient } = require('../config/clients');
+const { registerSchema, loginSchema, firebaseRegisterSchema, forgotPasswordSchema, resetPasswordSchema } = require('../validations/authValidation');
 
 const router = express.Router();
 
@@ -49,18 +50,18 @@ const logLoginAttempt = ({ req, user, email, provider, status, reason }) =>
   }).catch(() => {});
 
 router.post('/register', async (req, res) => {
-  const { name, email, phone, password, role = 'customer', companyName } = req.body;
-
-  if (!name || !email || !phone || !password) {
-    return res.status(400).json({ message: 'Name, email, phone, and password are required.' });
+  const { error, value } = registerSchema.validate(req.body, { abortEarly: false });
+  if (error) {
+    return res.status(400).json({
+      message: 'Validation failed',
+      errors: error.details.map(detail => ({ field: detail.path.join('.'), message: detail.message }))
+    });
   }
+
+  const { name, email, phone, password, role, companyName } = value;
 
   if (!validatePassword(password)) {
     return res.status(400).json({ message: 'Password must be at least 8 characters.' });
-  }
-
-  if (!['customer', 'driver', 'admin', 'superadmin'].includes(role)) {
-    return res.status(400).json({ message: 'Invalid role.' });
   }
 
   const existing = await User.findOne({ email });
@@ -97,17 +98,15 @@ router.post('/register', async (req, res) => {
 });
 
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    await logLoginAttempt({
-      req,
-      email,
-      provider: 'local',
-      status: 'failure',
-      reason: 'missing_credentials',
+  const { error } = loginSchema.validate(req.body, { abortEarly: false });
+  if (error) {
+    return res.status(400).json({
+      message: 'Validation failed',
+      errors: error.details.map(detail => ({ field: detail.path.join('.'), message: detail.message }))
     });
-    return res.status(400).json({ message: 'Email and password are required.' });
   }
+
+  const { email, password } = req.body;
 
   const user = await User.findOne({ email });
   if (!user || !user.password) {
@@ -205,13 +204,16 @@ router.post('/firebase/login', async (req, res) => {
 });
 
 router.post('/firebase/register', async (req, res) => {
-  const { idToken, name, phone, role = 'customer', companyName } = req.body;
-  if (!idToken || !name || !phone) {
-    return res.status(400).json({ message: 'ID token, name, and phone are required.' });
+  const { error, value } = firebaseRegisterSchema.validate(req.body, { abortEarly: false });
+  if (error) {
+    return res.status(400).json({
+      message: 'Validation failed',
+      errors: error.details.map(detail => ({ field: detail.path.join('.'), message: detail.message }))
+    });
   }
-  if (!['customer', 'driver', 'admin', 'superadmin'].includes(role)) {
-    return res.status(400).json({ message: 'Invalid role.' });
-  }
+
+  const { idToken, name, phone, role, companyName } = value;
+
   if (!firebaseReady()) {
     return res.status(503).json({ message: 'Firebase authentication unavailable.' });
   }
@@ -263,8 +265,15 @@ router.get('/me', require('../middleware/combinedAuth').authenticate, async (req
 });
 
 router.post('/forgot-password', async (req, res) => {
+  const { error } = forgotPasswordSchema.validate(req.body, { abortEarly: false });
+  if (error) {
+    return res.status(400).json({
+      message: 'Validation failed',
+      errors: error.details.map(detail => ({ field: detail.path.join('.'), message: detail.message }))
+    });
+  }
+
   const { phone } = req.body;
-  if (!phone) return res.status(400).json({ message: 'Phone is required.' });
 
   const user = await User.findOne({ phone });
   if (!user) return res.status(404).json({ message: 'User not found.' });
@@ -290,14 +299,15 @@ router.post('/forgot-password', async (req, res) => {
 });
 
 router.post('/reset-password', async (req, res) => {
-  const { phone, otp, newPassword } = req.body;
-  if (!phone || !otp || !newPassword) {
-    return res.status(400).json({ message: 'Phone, OTP, and new password are required.' });
+  const { error, value } = resetPasswordSchema.validate(req.body, { abortEarly: false });
+  if (error) {
+    return res.status(400).json({
+      message: 'Validation failed',
+      errors: error.details.map(detail => ({ field: detail.path.join('.'), message: detail.message }))
+    });
   }
 
-  if (!validatePassword(newPassword)) {
-    return res.status(400).json({ message: 'Password must be at least 8 characters.' });
-  }
+  const { phone, otp, newPassword } = value;
 
   if (!redisClient) {
     return res.status(503).json({ message: 'OTP service unavailable.' });

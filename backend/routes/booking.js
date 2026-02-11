@@ -9,6 +9,7 @@ const DriverAssignment = require('../models/DriverAssignment');
 const User = require('../models/User');
 const { authenticate, authorize } = require('../middleware/combinedAuth');
 const { generateBiltyPDF, generateInvoicePDF } = require('../utils/pdfGenerator');
+const { createBookingSchema, updateStatusSchema, updatePaymentSchema } = require('../validations/bookingValidation');
 
 const router = express.Router();
 
@@ -24,11 +25,15 @@ const getFreightRate = () => {
 };
 
 router.post('/create', authenticate, authorize('admin'), async (req, res) => {
-  const { loadId, truckId, advancePaid = 0, paymentMode = 'cash' } = req.body;
-
-  if (!loadId || !truckId) {
-    return res.status(400).json({ message: 'Load and truck are required.' });
+  const { error, value } = createBookingSchema.validate(req.body, { abortEarly: false });
+  if (error) {
+    return res.status(400).json({
+      message: 'Validation failed',
+      errors: error.details.map(detail => ({ field: detail.path.join('.'), message: detail.message }))
+    });
   }
+
+  const { loadId, truckId, advancePaid, paymentMode } = value;
 
   const load = await Load.findById(loadId);
   if (!load) return res.status(404).json({ message: 'Load not found.' });
@@ -158,10 +163,15 @@ router.get('/driver/bookings', authenticate, authorize('driver'), async (req, re
 });
 
 router.patch('/:id/status', authenticate, authorize('driver'), async (req, res) => {
-  const { status } = req.body;
-  if (!['assigned', 'in-transit', 'delivered'].includes(status)) {
-    return res.status(400).json({ message: 'Invalid status.' });
+  const { error, value } = updateStatusSchema.validate(req.body, { abortEarly: false });
+  if (error) {
+    return res.status(400).json({
+      message: 'Validation failed',
+      errors: error.details.map(detail => ({ field: detail.path.join('.'), message: detail.message }))
+    });
   }
+
+  const { status } = value;
 
   const booking = await Booking.findOne({ _id: req.params.id, driver: req.user.userId });
   if (!booking) return res.status(404).json({ message: 'Booking not found.' });
@@ -185,10 +195,15 @@ router.patch('/:id/status', authenticate, authorize('driver'), async (req, res) 
 });
 
 router.post('/:id/payment', authenticate, authorize('admin'), async (req, res) => {
-  const { status } = req.body;
-  if (!['paid', 'pending'].includes(status)) {
-    return res.status(400).json({ message: 'Invalid payment status.' });
+  const { error, value } = updatePaymentSchema.validate(req.body, { abortEarly: false });
+  if (error) {
+    return res.status(400).json({
+      message: 'Validation failed',
+      errors: error.details.map(detail => ({ field: detail.path.join('.'), message: detail.message }))
+    });
   }
+
+  const { status } = value;
 
   const booking = await Booking.findById(req.params.id);
   if (!booking) return res.status(404).json({ message: 'Booking not found.' });

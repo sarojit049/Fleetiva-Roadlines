@@ -1,7 +1,17 @@
 import React, { useContext, useMemo } from "react";
+
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { AppContext } from "./context/AppContext";
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AppContext } from "./context/appContextStore";
 import { safeStorage } from "./utils/storage";
+
 
 import Navbar from "./components/Navbar";
 import LandingPage from "./pages/LandingPage";
@@ -15,6 +25,9 @@ import SystemLogs from "./pages/SystemLogs";
 import PostLoad from "./pages/PostLoad";
 import PostTruck from "./pages/PostTruck";
 import ForgotPassword from "./pages/ForgotPassword";
+import Profile from "./pages/Profile";
+import Stats from "./pages/Stats";
+import MyLoads from "./pages/MyLoads";
 
 const ProtectedRoute = ({ children, role }) => {
   const { user, loading } = useContext(AppContext);
@@ -52,7 +65,10 @@ const App = () => {
       <Routes>
         <Route path="/" element={user ? <RootRedirect /> : <LandingPage />} />
         <Route path="/login" element={user ? <RootRedirect /> : <Login />} />
-        <Route path="/register" element={user ? <RootRedirect /> : <Register />} />
+        <Route
+          path="/register"
+          element={user ? <RootRedirect /> : <Register />}
+        />
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
         <Route
@@ -112,6 +128,30 @@ const App = () => {
           element={
             <ProtectedRoute role="driver">
               <PostTruck />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/stats"
+          element={
+            <ProtectedRoute>
+              <Stats />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-loads"
+          element={
+            <ProtectedRoute>
+              <MyLoads />
             </ProtectedRoute>
           }
         />

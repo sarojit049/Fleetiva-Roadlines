@@ -1,6 +1,7 @@
 const express = require('express');
 const Tenant = require('../models/Tenant');
 const { authenticate, authorize } = require('../middleware/combinedAuth');
+const { updateTenantStatusSchema } = require('../validations/tenantValidation');
 
 const router = express.Router();
 
@@ -10,10 +11,17 @@ router.get('/', authenticate, authorize('superadmin'), async (req, res) => {
 });
 
 router.patch('/:id/status', authenticate, authorize('superadmin'), async (req, res) => {
-  const { isActive } = req.body;
+  const { error, value } = updateTenantStatusSchema.validate(req.body, { abortEarly: false });
+  if (error) {
+    return res.status(400).json({
+      message: 'Validation failed',
+      errors: error.details.map(detail => ({ field: detail.path.join('.'), message: detail.message }))
+    });
+  }
+
   const tenant = await Tenant.findByIdAndUpdate(
     req.params.id,
-    { isActive: Boolean(isActive) },
+    { isActive: value.isActive },
     { new: true }
   );
 
