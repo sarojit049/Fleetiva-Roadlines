@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Link, useNavigate } from "react-router-dom";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { AppContext } from "../context/appContextStore";
-import Toast from "../components/Toast";
+import { toast } from "react-hot-toast";
 import api from "../api/axios";
 import { safeStorage } from "../utils/storage";
 import { auth, hasFirebaseConfig } from "../firebase";
@@ -11,8 +11,6 @@ import { auth, hasFirebaseConfig } from "../firebase";
 export default function Register() {
   const navigate = useNavigate();
   const { loading, setLoading, setUser } = useContext(AppContext);
-
-  const [error, setError] = useState("");
 
   const [formData, setFormData] = useState({
     companyName: "",
@@ -82,10 +80,9 @@ export default function Register() {
     e.preventDefault();
     if (loading) return;
 
-    setError("");
     const validationError = validateRegisterForm(formData);
     if (validationError) {
-      setError(validationError);
+      toast.error(validationError);
       setLoading(false);
       return;
     }
@@ -101,12 +98,12 @@ export default function Register() {
       else navigate("/dashboard", { replace: true });
     } catch (err) {
       if (err.response) {
-        setError(
+        toast.error(
           err.response.data?.message ||
-            "Registration service is currently unavailable. Please try again later.",
+          "Registration service is currently unavailable. Please try again later.",
         );
       } else {
-        setError(err.message || "Registration failed");
+        toast.error(err.message || "Registration failed");
       }
     } finally {
       setLoading(false);
@@ -129,8 +126,6 @@ export default function Register() {
         <p className="page-subtitle" style={{ textAlign: "center" }}>
           Join Fleetiva Roadlines to manage shipments effortlessly.
         </p>
-
-        {error && <Toast message={error} />}
 
         <form
           onSubmit={handleSubmit}

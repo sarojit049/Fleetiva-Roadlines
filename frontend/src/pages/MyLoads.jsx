@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import Skeleton from "../components/Skeleton";
 
 const formatDate = (dateStr) => {
   if (!dateStr) return "—";
@@ -25,7 +26,7 @@ export default function MyLoads() {
 
   useEffect(() => {
     api
-      .get("/customer/loads")
+      .get("/load/customer")
       .then((res) => setLoads(Array.isArray(res.data) ? res.data : []))
       .catch(() => setLoads([]))
       .finally(() => setLoading(false));
@@ -35,10 +36,20 @@ export default function MyLoads() {
     return (
       <div className="myloads-page">
         <div className="myloads-content">
-          <h1 className="myloads-title">My Loads</h1>
-          <div className="myloads-loading-wrap">
-            <div className="myloads-loading" aria-hidden="true" />
-            <p className="myloads-loading-text">Loading your loads…</p>
+          <div className="myloads-header">
+            <div className="myloads-header-text">
+              <Skeleton width="150px" height="36px" />
+              <div style={{ marginTop: "12px" }}>
+                <Skeleton width="300px" height="18px" />
+              </div>
+            </div>
+          </div>
+          <div className="myloads-list" style={{ marginTop: "40px" }}>
+            {[1, 2, 3].map(n => (
+              <div key={n} className="myloads-card">
+                <Skeleton width="100%" height="150px" borderRadius="16px" />
+              </div>
+            ))}
           </div>
         </div>
       </div>

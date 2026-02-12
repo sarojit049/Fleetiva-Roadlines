@@ -8,10 +8,8 @@ import {
 } from "react-router-dom";
 import { AppContext } from "./context/AppContext";
 
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { AppContext } from "./context/appContextStore";
 import { safeStorage } from "./utils/storage";
-
+import { Toaster } from "react-hot-toast";
 
 import Navbar from "./components/Navbar";
 import LandingPage from "./pages/LandingPage";
@@ -28,6 +26,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import Profile from "./pages/Profile";
 import Stats from "./pages/Stats";
 import MyLoads from "./pages/MyLoads";
+import MyTrucks from "./pages/MyTrucks";
 
 const ProtectedRoute = ({ children, role }) => {
   const { user, loading } = useContext(AppContext);
@@ -155,7 +154,16 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/my-trucks"
+          element={
+            <ProtectedRoute role="driver">
+              <MyTrucks />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
+      <Toaster position="top-right" />
     </Router>
   );
 };

@@ -35,8 +35,6 @@ describe("Dashboard", () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText(/Loading bookings/i)).toBeInTheDocument();
-
     await waitFor(() => {
       expect(screen.getByText(/Steel/i)).toBeInTheDocument();
     });

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import api from "../api/axios";
+import { toast } from "react-hot-toast";
 
 export default function PostTruck() {
   const [vehicleNumber, setVehicleNumber] = useState("");
@@ -10,11 +11,11 @@ export default function PostTruck() {
 
   const postTruck = async () => {
     if (!vehicleNumber || !capacity || !vehicleType || !currentLocation) {
-      alert("Please fill in all required fields.");
+      toast.error("Please fill in all required fields.");
       return;
     }
     if (Number(capacity) <= 0) {
-      alert("Capacity must be greater than 0.");
+      toast.error("Capacity must be greater than 0.");
       return;
     }
     try {
@@ -24,14 +25,15 @@ export default function PostTruck() {
         vehicleType,
         currentLocation,
       });
-      alert("Truck Posted Successfully");
+      toast.success("Truck Posted Successfully");
       setVehicleNumber("");
       setCapacity("");
       setVehicleType("");
       setCurrentLocation("");
     } catch (error) {
       console.error("Failed to post truck:", error);
-      alert("Failed to post truck.");
+      const msg = error.response?.data?.message || "Failed to post truck.";
+      toast.error(msg);
     }
   };
 

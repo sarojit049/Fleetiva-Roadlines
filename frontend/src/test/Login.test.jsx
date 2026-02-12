@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { vi } from "vitest";
+import { HelmetProvider } from "react-helmet-async";
 import Login from "../pages/Login";
 import { AppContext } from "../context/appContextStore";
 
@@ -38,11 +39,13 @@ describe("Login", () => {
     const setUser = vi.fn();
 
     render(
-      <MemoryRouter>
-        <AppContext.Provider value={{ loading: false, setLoading, setUser }}>
-          <Login />
-        </AppContext.Provider>
-      </MemoryRouter>
+      <HelmetProvider>
+        <MemoryRouter>
+          <AppContext.Provider value={{ loading: false, setLoading, setUser }}>
+            <Login />
+          </AppContext.Provider>
+        </MemoryRouter>
+      </HelmetProvider>
     );
 
     await user.type(screen.getByLabelText(/Email Address/i), "user@example.com");

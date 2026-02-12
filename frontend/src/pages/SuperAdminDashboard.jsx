@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import api from "../api/axios";
+import { toast } from "react-hot-toast";
+import Skeleton from "../components/Skeleton";
 
 export default function SuperAdminDashboard() {
   const [tenants, setTenants] = useState([]);
@@ -28,7 +30,7 @@ export default function SuperAdminDashboard() {
       fetchTenants();
     } catch (error) {
       console.error("Error updating tenant status:", error);
-      alert("Error updating tenant status");
+      toast.error("Error updating tenant status");
     }
   };
 
@@ -51,7 +53,13 @@ export default function SuperAdminDashboard() {
         <section className="stack">
           <h3 className="section-title">Registered Companies (Tenants)</h3>
           {loading ? (
-            <p className="text-muted">Loading...</p>
+            <div className="card-grid cols-2">
+              {[1, 2].map(n => (
+                <div key={n} className="card">
+                  <Skeleton width="100%" height="120px" borderRadius="16px" />
+                </div>
+              ))}
+            </div>
           ) : (
             <div className="card-grid cols-2">
               {tenants.map((tenant) => (

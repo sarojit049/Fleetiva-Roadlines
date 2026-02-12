@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../api/axios";
 import { useNavigate, Link } from "react-router-dom";
+import { toast } from "react-hot-toast";
 
 export default function ForgotPassword() {
   const [phone, setPhone] = useState("");
@@ -27,7 +28,7 @@ export default function ForgotPassword() {
   const handleRequest = async (e) => {
     e.preventDefault();
     if (!/^\d{10}$/.test(phone)) {
-      alert("Enter a valid 10-digit phone number.");
+      toast.error("Enter a valid 10-digit phone number.");
       return;
     }
     setLoading(true);
@@ -35,7 +36,7 @@ export default function ForgotPassword() {
       await api.post("/auth/forgot-password", { phone });
       setStep("reset");
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to send OTP");
+      toast.error(err.response?.data?.message || "Failed to send OTP");
     } finally {
       setLoading(false);
     }
@@ -44,11 +45,11 @@ export default function ForgotPassword() {
   const handleReset = async (e) => {
     e.preventDefault();
     if (!/^\d{6}$/.test(otp)) {
-      alert("Enter a valid 6-digit OTP.");
+      toast.error("Enter a valid 6-digit OTP.");
       return;
     }
     if (newPassword.length < 8) {
-      alert("Password must be at least 8 characters.");
+      toast.error("Password must be at least 8 characters.");
       return;
     }
     setLoading(true);
@@ -56,7 +57,7 @@ export default function ForgotPassword() {
       await api.post("/auth/reset-password", { phone, otp, newPassword });
       setSuccess(true);
     } catch (err) {
-      alert(err.response?.data?.message || "Reset failed");
+      toast.error(err.response?.data?.message || "Reset failed");
     } finally {
       setLoading(false);
     }

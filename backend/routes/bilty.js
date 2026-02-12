@@ -4,6 +4,7 @@ const Booking = require('../models/Booking');
 const BillingRecord = require('../models/BillingRecord');
 const { authenticate, authorize } = require('../middleware/combinedAuth');
 const { createBiltySchema, updateBiltySchema } = require('../validations/biltyValidation');
+const asyncHandler = require('../utils/asyncHandler');
 
 const router = express.Router();
 
@@ -40,14 +41,14 @@ const allowedUpdateFields = new Set([
   'shipmentStatus',
 ]);
 
-router.get('/', authenticate, authorize('admin'), async (req, res) => {
+router.get('/', authenticate, authorize('admin'), asyncHandler(async (req, res) => {
   const bilties = await Bilty.find()
     .populate('booking', '_id status paymentStatus')
     .sort({ createdAt: -1 });
   res.json(bilties);
-});
+}));
 
-router.post('/', authenticate, authorize('admin'), async (req, res) => {
+router.post('/', authenticate, authorize('admin'), asyncHandler(async (req, res) => {
   const { error, value } = createBiltySchema.validate(req.body, { abortEarly: false });
   if (error) {
     return res.status(400).json({
@@ -83,9 +84,9 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
   );
 
   res.status(201).json(bilty);
-});
+}));
 
-router.patch('/:id', authenticate, authorize('admin'), async (req, res) => {
+router.patch('/:id', authenticate, authorize('admin'), asyncHandler(async (req, res) => {
   const { error, value } = updateBiltySchema.validate(req.body, { abortEarly: false });
   if (error) {
     return res.status(400).json({
@@ -123,9 +124,9 @@ router.patch('/:id', authenticate, authorize('admin'), async (req, res) => {
   }
 
   res.json(bilty);
-});
+}));
 
-router.delete('/:id', authenticate, authorize('admin'), async (req, res) => {
+router.delete('/:id', authenticate, authorize('admin'), asyncHandler(async (req, res) => {
   const bilty = await Bilty.findByIdAndDelete(req.params.id);
   if (!bilty) {
     return res.status(404).json({ message: 'Bilty not found.' });
@@ -138,6 +139,6 @@ router.delete('/:id', authenticate, authorize('admin'), async (req, res) => {
   );
 
   res.json({ message: 'Bilty deleted.' });
-});
+}));
 
 module.exports = router;

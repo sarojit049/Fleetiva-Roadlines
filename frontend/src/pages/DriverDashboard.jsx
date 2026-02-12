@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import api from "../api/axios";
-import { getApiBaseUrl } from "../api/baseUrl";
-import { safeStorage } from "../utils/storage";
+import { toast } from "react-hot-toast";
+import { downloadFile } from "../utils/download";
+import Skeleton from "../components/Skeleton";
 
 export default function DriverDashboard() {
   const [bookings, setBookings] = useState([]);
@@ -23,26 +24,33 @@ export default function DriverDashboard() {
     try {
       setLoading(true);
       await api.patch(`/booking/${id}/status`, { status });
+      toast.success(`Status updated to ${status}`);
       fetchBookings();
     } catch (error) {
       console.error("Failed to update status:", error);
-      alert("Failed to update status");
+      toast.error("Failed to update status");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const API_BASE = getApiBaseUrl();
+  const downloadBilty = async (id) => {
+    try {
+      await downloadFile(`/booking/${id}/bilty`, `bilty-${id}.pdf`);
+      toast.success("Bilty downloaded successfully");
+    } catch {
+      toast.error("Failed to download Bilty");
+    }
+  };
 
-  const downloadBilty = (id) =>
-    window.open(
-      `${API_BASE}/booking/${id}/bilty?token=${safeStorage.get("accessToken")}`,
-      "_blank"
-    );
-
-  const downloadInvoice = (id) =>
-    window.open(
-      `${API_BASE}/booking/${id}/invoice?token=${safeStorage.get("accessToken")}`,
-      "_blank"
-    );
+  const downloadInvoice = async (id) => {
+    try {
+      await downloadFile(`/booking/${id}/invoice`, `invoice-${id}.pdf`);
+      toast.success("Invoice downloaded successfully");
+    } catch {
+      toast.error("Failed to download Invoice");
+    }
+  };
 
   return (
     <div className="page">
@@ -61,7 +69,18 @@ export default function DriverDashboard() {
         </div>
         <section className="stack">
           {loading ? (
-            <p className="text-muted">Loading bookings...</p>
+            [1, 2, 3].map((n) => (
+              <div key={n} className="card">
+                <Skeleton width="50%" height="24px" />
+                <div style={{ marginTop: "12px" }}>
+                  <Skeleton width="30%" height="16px" />
+                </div>
+                <div className="toolbar" style={{ marginTop: "16px" }}>
+                  <Skeleton width="100px" height="36px" borderRadius="10px" />
+                  <Skeleton width="100px" height="36px" borderRadius="10px" />
+                </div>
+              </div>
+            ))
           ) : bookings.length > 0 ? (
             bookings.map((b) => (
               <div key={b._id} className="card">

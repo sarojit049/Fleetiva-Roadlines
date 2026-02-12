@@ -1,6 +1,9 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import { AppContext } from "../context/AppContext";
+import { safeStorage } from "../utils/storage";
+import Skeleton from "../components/Skeleton";
 
 const formatMoney = (n) =>
   typeof n === "number" && !Number.isNaN(n)
@@ -9,16 +12,20 @@ const formatMoney = (n) =>
 
 export default function Stats() {
   const navigate = useNavigate();
+  const { user } = useContext(AppContext);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const role = user?.role || safeStorage.get("role") || "customer";
+
   useEffect(() => {
+    const endpoint = role === "driver" ? "/booking/driver/bookings" : "/booking/customer/bookings";
     api
-      .get("/customer/bookings")
+      .get(endpoint)
       .then((res) => setBookings(Array.isArray(res.data) ? res.data : []))
       .catch(() => setBookings([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [role]);
 
   const {
     totalEarnings,
@@ -60,16 +67,16 @@ export default function Stats() {
     const avgPerDelivery =
       pastContracts.length > 0
         ? pastContracts.reduce(
-            (s, b) => s + (Number(b.amount) || 0) + (Number(b.gstAmount) || 0),
-            0,
-          ) / pastContracts.length
+          (s, b) => s + (Number(b.amount) || 0) + (Number(b.gstAmount) || 0),
+          0,
+        ) / pastContracts.length
         : 0;
     const futureEstimate =
       currentWork.length > 0
         ? currentWork.reduce(
-            (s, b) => s + (Number(b.amount) || 0) + (Number(b.gstAmount) || 0),
-            0,
-          )
+          (s, b) => s + (Number(b.amount) || 0) + (Number(b.gstAmount) || 0),
+          0,
+        )
         : avgPerDelivery;
 
     return {
@@ -88,11 +95,28 @@ export default function Stats() {
     return (
       <div className="stats-page">
         <div className="stats-content">
-          <h1 className="stats-title">My Stats</h1>
-          <div className="stats-loading-wrap">
-            <div className="stats-loading" aria-hidden="true" />
-            <p className="stats-loading-text">Loading your stats…</p>
-          </div>
+          <header className="stats-header">
+            <h1 className="stats-title">My Stats</h1>
+            <p className="stats-subtitle">
+              Earnings, past contracts, current work & future estimates.
+            </p>
+          </header>
+          <section className="stats-section">
+            <h2 className="stats-section-title">Earnings</h2>
+            <div className="stats-earnings-grid">
+              {[1, 2, 3].map((n) => (
+                <div key={n} className="profile-stat-card">
+                  <Skeleton width="100%" height="80px" borderRadius="16px" />
+                </div>
+              ))}
+            </div>
+          </section>
+          <section className="stats-section" style={{ marginTop: "40px" }}>
+            <Skeleton width="200px" height="28px" />
+            <div style={{ marginTop: "20px" }}>
+              <Skeleton width="100%" height="150px" borderRadius="16px" />
+            </div>
+          </section>
         </div>
       </div>
     );
@@ -192,9 +216,8 @@ export default function Stats() {
                       )}
                     </span>
                     <span
-                      className={`stats-contract-badge ${
-                        b.paymentStatus === "paid" ? "paid" : "pending"
-                      }`}
+                      className={`stats-contract-badge ${b.paymentStatus === "paid" ? "paid" : "pending"
+                        }`}
                     >
                       {b.paymentStatus === "paid" ? "Paid" : "Pending"}
                     </span>
@@ -247,9 +270,8 @@ export default function Stats() {
                       )}
                     </span>
                     <span
-                      className={`tag ${
-                        b.status === "in-transit" ? "info" : "warning"
-                      }`}
+                      className={`tag ${b.status === "in-transit" ? "info" : "warning"
+                        }`}
                     >
                       {b.status}
                     </span>

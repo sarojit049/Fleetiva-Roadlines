@@ -6,6 +6,7 @@ const User = require('../models/User');
 const LoginLog = require('../models/LoginLog');
 const { twilioClient, redisClient } = require('../config/clients');
 const { registerSchema, loginSchema, firebaseRegisterSchema, forgotPasswordSchema, resetPasswordSchema } = require('../validations/authValidation');
+const asyncHandler = require('../utils/asyncHandler');
 
 const router = express.Router();
 
@@ -47,9 +48,9 @@ const logLoginAttempt = ({ req, user, email, provider, status, reason }) =>
     reason,
     ip: req.ip,
     userAgent: req.get('user-agent'),
-  }).catch(() => {});
+  }).catch(() => { });
 
-router.post('/register', async (req, res) => {
+router.post('/register', asyncHandler(async (req, res) => {
   const { error, value } = registerSchema.validate(req.body, { abortEarly: false });
   if (error) {
     return res.status(400).json({
@@ -95,9 +96,9 @@ router.post('/register', async (req, res) => {
       companyName: user.companyName,
     },
   });
-});
+}));
 
-router.post('/login', async (req, res) => {
+router.post('/login', asyncHandler(async (req, res) => {
   const { error } = loginSchema.validate(req.body, { abortEarly: false });
   if (error) {
     return res.status(400).json({
@@ -147,9 +148,9 @@ router.post('/login', async (req, res) => {
       companyName: user.companyName,
     },
   });
-});
+}));
 
-router.post('/firebase/login', async (req, res) => {
+router.post('/firebase/login', asyncHandler(async (req, res) => {
   const { idToken } = req.body;
   if (!idToken) {
     await logLoginAttempt({
@@ -201,9 +202,9 @@ router.post('/firebase/login', async (req, res) => {
       companyName: user.companyName,
     },
   });
-});
+}));
 
-router.post('/firebase/register', async (req, res) => {
+router.post('/firebase/register', asyncHandler(async (req, res) => {
   const { error, value } = firebaseRegisterSchema.validate(req.body, { abortEarly: false });
   if (error) {
     return res.status(400).json({
@@ -251,20 +252,20 @@ router.post('/firebase/register', async (req, res) => {
       companyName: user.companyName,
     },
   });
-});
+}));
 
 router.post('/logout', (req, res) => {
   res.clearCookie('accessToken');
   res.json({ message: 'Logged out' });
 });
 
-router.get('/me', require('../middleware/combinedAuth').authenticate, async (req, res) => {
+router.get('/me', require('../middleware/combinedAuth').authenticate, asyncHandler(async (req, res) => {
   const user = await User.findById(req.user.userId).select('-password');
   if (!user) return res.status(404).json({ message: 'User not found.' });
   res.json({ user });
-});
+}));
 
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password', asyncHandler(async (req, res) => {
   const { error } = forgotPasswordSchema.validate(req.body, { abortEarly: false });
   if (error) {
     return res.status(400).json({
@@ -296,9 +297,9 @@ router.post('/forgot-password', async (req, res) => {
   });
 
   res.json({ message: 'OTP sent successfully.' });
-});
+}));
 
-router.post('/reset-password', async (req, res) => {
+router.post('/reset-password', asyncHandler(async (req, res) => {
   const { error, value } = resetPasswordSchema.validate(req.body, { abortEarly: false });
   if (error) {
     return res.status(400).json({
@@ -325,6 +326,6 @@ router.post('/reset-password', async (req, res) => {
   await redisClient.del(`otp:${phone}`);
 
   res.json({ message: 'Password updated successfully.' });
-});
+}));
 
 module.exports = router;

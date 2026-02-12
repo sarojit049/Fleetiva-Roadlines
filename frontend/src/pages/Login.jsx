@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Link, useNavigate } from "react-router-dom";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { AppContext } from "../context/appContextStore";
-import Toast from "../components/Toast";
+import { toast } from "react-hot-toast";
 import api from "../api/axios";
 import { safeStorage } from "../utils/storage";
 import { auth, googleProvider, hasFirebaseConfig } from "../firebase";
@@ -12,7 +12,6 @@ export default function Login() {
   const navigate = useNavigate();
   const { loading, setLoading, setUser } = useContext(AppContext);
 
-  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -57,10 +56,9 @@ export default function Login() {
     e.preventDefault();
     if (loading) return;
 
-    setError("");
     const validationError = validateLoginForm(formData);
     if (validationError) {
-      setError(validationError);
+      toast.error(validationError);
       setLoading(false);
       return;
     }
@@ -93,12 +91,12 @@ export default function Login() {
       else navigate("/dashboard", { replace: true });
     } catch (err) {
       if (err.response) {
-        setError(
+        toast.error(
           err.response.data?.message ||
-            "Login service is currently unavailable. Please try again later.",
+          "Login service is currently unavailable. Please try again later.",
         );
       } else {
-        setError(formatFirebaseError(err));
+        toast.error(formatFirebaseError(err));
       }
     } finally {
       setLoading(false);
@@ -108,11 +106,10 @@ export default function Login() {
   const handleGoogleLogin = async () => {
     if (loading) return;
     if (!hasFirebaseConfig || !auth || !googleProvider) {
-      setError("Google login is not configured in this environment.");
+      toast.error("Google login is not configured in this environment.");
       return;
     }
 
-    setError("");
     setLoading(true);
 
     try {
@@ -123,7 +120,7 @@ export default function Login() {
       else if (role === "driver") navigate("/driver", { replace: true });
       else navigate("/dashboard", { replace: true });
     } catch (err) {
-      setError(err.response?.data?.message || formatFirebaseError(err));
+      toast.error(err.response?.data?.message || formatFirebaseError(err));
     } finally {
       setLoading(false);
     }
@@ -145,8 +142,6 @@ export default function Login() {
         <p className="page-subtitle" style={{ textAlign: "center" }}>
           Sign in to manage your loads and bookings.
         </p>
-
-        {error && <Toast message={error} />}
 
         <form onSubmit={handleLogin} className="form" style={{ marginTop: 24 }}>
           <input

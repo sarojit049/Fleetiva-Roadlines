@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
+import { toast } from "react-hot-toast";
+import Skeleton from "../components/Skeleton";
 
 export default function SystemLogs() {
   const [logs, setLogs] = useState([]);
@@ -25,10 +27,10 @@ export default function SystemLogs() {
     try {
       await api.delete("/logs");
       setLogs([]);
-      alert("Logs cleared successfully");
+      toast.success("Logs cleared successfully");
     } catch (error) {
       console.error("Failed to clear logs:", error);
-      alert("Failed to clear logs");
+      toast.error("Failed to clear logs");
     }
   };
 
@@ -122,7 +124,13 @@ export default function SystemLogs() {
         </div>
 
         {loading ? (
-          <p className="text-muted">Loading logs...</p>
+          <div className="stack">
+            {[1, 2, 3].map(n => (
+              <div key={n} className="card">
+                <Skeleton width="100%" height="100px" borderRadius="16px" />
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="stack">
             {filteredLogs.length === 0 ? (
@@ -136,9 +144,8 @@ export default function SystemLogs() {
                 <div key={log._id} className="card">
                   <div className="page-header">
                     <span
-                      className={`tag ${
-                        log.statusCode >= 500 ? "danger" : "warning"
-                      }`}
+                      className={`tag ${log.statusCode >= 500 ? "danger" : "warning"
+                        }`}
                     >
                       {log.method} {log.statusCode}
                     </span>

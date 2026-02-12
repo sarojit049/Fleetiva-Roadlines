@@ -3,6 +3,8 @@ import api from "../api/axios";
 import { AppContext } from "./appContextStore";
 import { safeStorage } from "../utils/storage";
 
+export { AppContext };
+
 export const AppProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState(null);

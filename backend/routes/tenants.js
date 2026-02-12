@@ -2,15 +2,16 @@ const express = require('express');
 const Tenant = require('../models/Tenant');
 const { authenticate, authorize } = require('../middleware/combinedAuth');
 const { updateTenantStatusSchema } = require('../validations/tenantValidation');
+const asyncHandler = require('../utils/asyncHandler');
 
 const router = express.Router();
 
-router.get('/', authenticate, authorize('superadmin'), async (req, res) => {
+router.get('/', authenticate, authorize('superadmin'), asyncHandler(async (req, res) => {
   const tenants = await Tenant.find().sort({ createdAt: -1 });
   res.json(tenants);
-});
+}));
 
-router.patch('/:id/status', authenticate, authorize('superadmin'), async (req, res) => {
+router.patch('/:id/status', authenticate, authorize('superadmin'), asyncHandler(async (req, res) => {
   const { error, value } = updateTenantStatusSchema.validate(req.body, { abortEarly: false });
   if (error) {
     return res.status(400).json({
@@ -30,6 +31,6 @@ router.patch('/:id/status', authenticate, authorize('superadmin'), async (req, r
   }
 
   res.json(tenant);
-});
+}));
 
 module.exports = router;

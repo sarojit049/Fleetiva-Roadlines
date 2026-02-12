@@ -2,10 +2,11 @@ const express = require('express');
 const Load = require('../models/Load');
 const { authenticate, authorize } = require('../middleware/combinedAuth');
 const { postLoadSchema } = require('../validations/loadValidation');
+const asyncHandler = require('../utils/asyncHandler');
 
 const router = express.Router();
 
-router.post('/post', authenticate, authorize('customer'), async (req, res) => {
+router.post('/post', authenticate, authorize('customer'), asyncHandler(async (req, res) => {
   const { error, value } = postLoadSchema.validate(req.body, { abortEarly: false });
   if (error) {
     return res.status(400).json({
@@ -27,11 +28,16 @@ router.post('/post', authenticate, authorize('customer'), async (req, res) => {
   });
 
   res.status(201).json(load);
-});
+}));
 
-router.get('/available', authenticate, authorize('admin'), async (req, res) => {
+router.get('/customer', authenticate, authorize('customer'), asyncHandler(async (req, res) => {
+  const loads = await Load.find({ customer: req.user.userId }).sort({ createdAt: -1 });
+  res.json(loads);
+}));
+
+router.get('/available', authenticate, authorize('admin'), asyncHandler(async (req, res) => {
   const loads = await Load.find().sort({ createdAt: -1 });
   res.json(loads);
-});
+}));
 
 module.exports = router;
