@@ -1,31 +1,24 @@
-const mongoose = require('mongoose');
-const { MongoMemoryServer } = require('mongodb-memory-server');
+const { connectMongo, stopInMemoryMongo } = require("../config/db2");
+const mongoose = require("mongoose");
 
-let mongoServer;
+jest.setTimeout(600000); // 10 minutes for initial MongoDB download
 
 beforeAll(async () => {
-  process.env.ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || 'test-secret';
-  process.env.ACCESS_TOKEN_TTL = '1d';
-  process.env.MONGOMS_VERSION = process.env.MONGOMS_VERSION || '7.0.14';
-  process.env.MONGOMS_DISTRO = process.env.MONGOMS_DISTRO || 'ubuntu-22.04';
-
-  mongoServer = await MongoMemoryServer.create({
-    binary: { version: process.env.MONGOMS_VERSION },
-  });
-  const uri = mongoServer.getUri();
-  await mongoose.connect(uri, { autoIndex: true });
+  process.env.SKIP_MONGO = "false"; 
+  // Ensure we don't accidentally connect to real DB if env vars are leaking
+  process.env.MONGO_URI = ""; 
+  await connectMongo();
 });
 
 afterAll(async () => {
-  await mongoose.disconnect();
-  if (mongoServer) {
-    await mongoServer.stop();
-  }
+  await stopInMemoryMongo();
 });
 
 afterEach(async () => {
-  const collections = await mongoose.connection.db.collections();
-  for (const collection of collections) {
-    await collection.deleteMany({});
+  if (mongoose.connection.readyState === 1) {
+    const collections = await mongoose.connection.db.collections();
+    for (const collection of collections) {
+      await collection.deleteMany({});
+    }
   }
 });

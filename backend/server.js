@@ -5,6 +5,8 @@ const { connectMongo } = require("./config/db2");
 
 require("./config/clients");
 
+require("./config/clients");
+
 const app = express();
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
@@ -18,6 +20,7 @@ const allowedOrigins = new Set(
     .filter(Boolean)
     .flatMap((value) => value.split(","))
     .map((value) => value.trim())
+    .filter(Boolean)
     .filter(Boolean),
 );
 
@@ -37,6 +40,7 @@ app.use((req, res, next) => {
   res.setHeader("Referrer-Policy", "no-referrer");
   res.setHeader(
     "Strict-Transport-Security",
+    "max-age=31536000; includeSubDomains; preload"
     "max-age=31536000; includeSubDomains; preload",
   );
   res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
@@ -54,6 +58,7 @@ app.use(
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  })
   }),
 );
 
@@ -86,6 +91,19 @@ if (process.env.SKIP_FIREBASE === "true") {
   console.warn("⚠️ Firebase env not set — running without Firebase");
 }
 
+// ================= HEALTH ROUTE =================
+app.get("/", (req, res) => {
+  res.json({ status: "Fleetiva backend running" });
+});
+
+// ================= API ROUTES =================
+app.use("/api/auth", require("./routes/auth"));
+app.use("/api/logistics", require("./routes/logistics"));
+
+// ================= ERROR HANDLER =================
+app.use(errorHandler);
+
+// ================= SERVER START & EXPORT =================
 // ================= DATABASE =================
 connectMongo()
   .then(() => console.log("✅ MongoDB connected"))
@@ -110,6 +128,18 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+if (require.main === module) {
+  // Only connect to DB and start server if run directly
+  connectMongo()
+    .then(() => console.log("✅ MongoDB connected"))
+    .catch((err) => {
+      console.error("❌ MongoDB connection failed:", err.message);
+      process.exit(1);
+    });
+
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+  });
+}
+
+module.exports = app;
