@@ -180,7 +180,6 @@ export default function AdminDashboard() {
     event.preventDefault();
     try {
       const { booking: _booking, ...payload } = biltyForm;
-
       await api.patch(`/bilty/${editingBiltyId}`, payload);
       toast.success("Bilty Updated Successfully!");
       setEditingBiltyId(null);
