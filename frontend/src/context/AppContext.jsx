@@ -1,12 +1,50 @@
-import { createContext, useState } from "react";
+import { useState, useEffect } from "react";
+import api from "../api/axios";
+import { AppContext } from "./appContextStore";
+import { safeStorage } from "../utils/storage";
 
-export const AppContext = createContext();
+export { AppContext };
 
 export const AppProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const token = safeStorage.get("accessToken");
+    if (!token) return;
+
+    setLoading(true);
+    api
+      .get("/auth/me")
+      .then((res) => {
+        const profile = res.data.user;
+        setUser(profile);
+        safeStorage.set("role", profile.role);
+      })
+      .catch(() => {
+        safeStorage.remove("accessToken");
+        safeStorage.remove("role");
+        setUser(null);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const logout = async () => {
+    setLoading(true);
+    try {
+      await api.post("/auth/logout");
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      safeStorage.remove("accessToken");
+      safeStorage.remove("role");
+      setUser(null);
+      setLoading(false);
+    }
+  };
 
   return (
-    <AppContext.Provider value={{ loading, setLoading }}>
+    <AppContext.Provider value={{ loading, setLoading, user, setUser, logout }}>
       {loading && <FullScreenLoader />}
       {children}
     </AppContext.Provider>
@@ -17,6 +55,11 @@ function FullScreenLoader() {
   return (
     <div style={styles.overlay}>
       <div style={styles.spinner}></div>
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }

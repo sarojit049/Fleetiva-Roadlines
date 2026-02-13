@@ -1,33 +1,101 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useContext, useState, useRef, useEffect } from "react";
+import { NavLink } from "react-router-dom";
+import { AppContext } from "../context/AppContext";
+import { safeStorage } from "../utils/storage";
+
+const getRole = (user) => user?.role || safeStorage.get("role") || "customer";
+
 
 export default function Navbar() {
-  const navigate = useNavigate();
-  const role = localStorage.getItem("role");
-  const token = localStorage.getItem("accessToken");
+  const { user, logout } = useContext(AppContext);
+  const role = getRole(user);
 
-  const logout = () => {
-    localStorage.clear();
-    navigate("/login");
-  };
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef();
 
-  if (!token) return null;
+  // ✅ Hooks must be above early return
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!dropdownRef.current?.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
+
+  if (!user) return null;
+
+  const dashboardRoute =
+    role === "superadmin"
+      ? "/superadmin"
+      : role === "admin"
+        ? "/admin"
+        : role === "driver"
+          ? "/driver"
+          : "/dashboard";
 
   return (
-    <nav style={{ padding: "10px 20px", background: "#111827", color: "#fff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-      <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
-        <Link to={role === "superadmin" ? "/superadmin" : role === "admin" ? "/admin" : role === "driver" ? "/driver" : "/"} style={{ color: "#fff", textDecoration: "none", fontWeight: "bold", fontSize: "1.2rem" }}>
-          🚚 Logistics MS
-        </Link>
-        {role === "superadmin" && <Link to="/superadmin" style={{ color: "#fff", textDecoration: "none" }}>Company Management</Link>}
-        {role === "superadmin" && <Link to="/superadmin/logs" style={{ color: "#fff", textDecoration: "none" }}>System Logs</Link>}
-        {role === "customer" && <Link to="/post-load" style={{ color: "#fff", textDecoration: "none" }}>Post Load</Link>}
-        {role === "driver" && <Link to="/post-truck" style={{ color: "#fff", textDecoration: "none" }}>Post Truck</Link>}
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-        <span style={{ fontSize: "0.8rem", opacity: 0.8 }}>Role: {role}</span>
-        <button onClick={logout} style={{ background: "#ef4444", color: "#fff", border: "none", cursor: "pointer", padding: "5px 10px", borderRadius: "4px" }}>
-          Logout
-        </button>
+    <nav className="navbar">
+      <div className="navbar-content">
+        <NavLink to={dashboardRoute} className="navbar-brand">
+          <span aria-hidden>🚚</span>
+          Fleetiva Roadlines
+        </NavLink>
+
+        <div className="navbar-links">
+          <NavLink to={dashboardRoute} className="nav-link">
+            Dashboard
+          </NavLink>
+
+          {role === "customer" && (
+            <NavLink to="/post-load" className="nav-link">
+              Post Load
+            </NavLink>
+          )}
+
+          {role === "driver" && (
+            <NavLink to="/post-truck" className="nav-link">
+              Post Truck
+            </NavLink>
+          )}
+        </div>
+
+        <div className="navbar-actions" ref={dropdownRef}>
+          <div
+            className="avatar"
+            onClick={() => setOpen(!open)}
+            style={{ cursor: "pointer" }}
+          >
+            {user?.email?.charAt(0).toUpperCase()}
+          </div>
+
+          {open && (
+            <div className="dropdown-menu">
+              <NavLink to="/profile" className="dropdown-item">
+                👤 My Profile
+              </NavLink>
+              <NavLink to="/stats" className="dropdown-item">
+                📊 My Stats
+              </NavLink>
+              {role === "customer" && (
+                <NavLink to="/my-loads" className="dropdown-item">
+                  🚚 My Loads
+                </NavLink>
+              )}
+              {role === "driver" && (
+                <NavLink to="/my-trucks" className="dropdown-item">
+                  🚛 My Trucks
+                </NavLink>
+              )}
+
+              <div className="dropdown-divider" />
+              <button className="dropdown-item logout" onClick={logout}>
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </nav>
   );

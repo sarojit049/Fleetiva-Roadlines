@@ -1,5 +1,6 @@
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const mongoose = require('mongoose');
 let MongoMemoryServer;
+
 try {
   MongoMemoryServer = require('mongodb-memory-server').MongoMemoryServer;
 } catch (e) {
@@ -7,57 +8,49 @@ try {
 }
 
 const uriFromEnv = process.env.MONGO_URI;
-
 let memoryServerInstance = null;
-let client = null;
-
-async function createClient(uri) {
-  return new MongoClient(uri, {
-    serverApi: {
-      version: ServerApiVersion.v1,
-      strict: true,
-      deprecationErrors: true,
-    }
-  });
-}
-
-async function startInMemoryMongo() {
-  if (!MongoMemoryServer) {
-    throw new Error('mongodb-memory-server not installed');
-  }
-  memoryServerInstance = await MongoMemoryServer.create();
-  const uri = memoryServerInstance.getUri();
-  client = await createClient(uri);
-  await client.connect();
-  console.log('✅ Started in-memory MongoDB for local testing');
-}
 
 async function connectMongo() {
+  if (mongoose.connection.readyState === 1) return;
+
   try {
-    if (uriFromEnv) {
-      client = await createClient(uriFromEnv);
-      await client.connect();
-      await client.db('admin').command({ ping: 1 });
-      console.log('✅ MongoDB: Pinged deployment — connected successfully');
-    } else if (process.env.SKIP_MONGO === 'true') {
-      console.log('⚠️ SKIP_MONGO=true — skipping MongoDB initialization');
-    } else {
-      if (!MongoMemoryServer) {
-        console.warn('⚠️ No MONGO_URI and mongodb-memory-server not installed; skipping');
-        return;
-      }
-      await startInMemoryMongo();
-      await client.db('admin').command({ ping: 1 });
+    if (!process.env.MONGOMS_VERSION) {
+      process.env.MONGOMS_VERSION = '7.0.14';
     }
+    if (!process.env.MONGOMS_DISTRO) {
+      process.env.MONGOMS_DISTRO = 'ubuntu-22.04';
+    }
+
+    if (uriFromEnv) {
+      await mongoose.connect(uriFromEnv, {
+        autoIndex: true,
+      });
+      return;
+    }
+
+    if (process.env.SKIP_MONGO === 'true') {
+      return;
+    }
+
+    if (!MongoMemoryServer) {
+      throw new Error('MONGO_URI is required or install mongodb-memory-server');
+    }
+
+    memoryServerInstance = await MongoMemoryServer.create();
+    const uri = memoryServerInstance.getUri();
+    await mongoose.connect(uri, { autoIndex: true });
   } catch (err) {
-    console.error('❌ MongoDB connection error:', err.message || err);
     throw err;
   }
 }
 
 async function stopInMemoryMongo() {
-  if (client) await client.close();
-  if (memoryServerInstance) await memoryServerInstance.stop();
+  if (mongoose.connection.readyState) {
+    await mongoose.disconnect();
+  }
+  if (memoryServerInstance) {
+    await memoryServerInstance.stop();
+  }
 }
 
-module.exports = { connectMongo, client: () => client, stopInMemoryMongo };
+module.exports = { connectMongo, stopInMemoryMongo };

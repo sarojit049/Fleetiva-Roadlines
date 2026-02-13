@@ -1,0 +1,42 @@
+services:
+  - type: web
+    name: fleetiva-backend
+    env: node
+    rootDir: backend
+    plan: free
+    autoDeploy: true
+    previewsEnabled: true
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false
+      - key: ACCESS_TOKEN_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: FRONTEND_PREVIEW_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: VERCEL_PREVIEW_SUFFIX
+        value: ".vercel.app"
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_PRIVATE_KEY
+        sync: false
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false
+      - key: SKIP_MONGO
+        sync: false
+      - key: SKIP_FIREBASE
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: REDIS_URL
+        sync: false

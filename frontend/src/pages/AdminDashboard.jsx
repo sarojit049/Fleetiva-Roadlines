@@ -1,15 +1,61 @@
 import { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import api from "../api/axios";
+import { toast } from "react-hot-toast";
+import { downloadFile } from "../utils/download";
+import UserSection from "../components/admin/UserSection";
+import LoadSection from "../components/admin/LoadSection";
+import BookingSection from "../components/admin/BookingSection";
+import BiltySection from "../components/admin/BiltySection";
 
 export default function AdminDashboard() {
   const [loads, setLoads] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [users, setUsers] = useState([]);
+  const [bilties, setBilties] = useState([]);
   const [matchingTrucks, setMatchingTrucks] = useState({});
   const [loading, setLoading] = useState(true);
-  const [hoveredCard, setHoveredCard] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [editingBiltyId, setEditingBiltyId] = useState(null);
+  const [biltyForm, setBiltyForm] = useState({
+    booking: "",
+    lrNumber: "",
+    consignorName: "",
+    consigneeName: "",
+    pickupLocation: "",
+    dropLocation: "",
+    materialType: "",
+    weight: "",
+    truckType: "",
+    driverName: "",
+    driverPhone: "",
+    vehicleNumber: "",
+    freightAmount: "",
+    advancePaid: "",
+    balanceAmount: "",
+    paymentMode: "cash",
+    shipmentStatus: "assigned"
+  });
+  const [newBilty, setNewBilty] = useState({
+    booking: "",
+    lrNumber: "",
+    consignorName: "",
+    consigneeName: "",
+    pickupLocation: "",
+    dropLocation: "",
+    materialType: "",
+    weight: "",
+    truckType: "",
+    driverName: "",
+    driverPhone: "",
+    vehicleNumber: "",
+    freightAmount: "",
+    advancePaid: "",
+    balanceAmount: "",
+    paymentMode: "cash",
+    shipmentStatus: "assigned"
+  });
 
   useEffect(() => {
     fetchData();
@@ -18,16 +64,18 @@ export default function AdminDashboard() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [loadsRes, bookingsRes, usersRes] = await Promise.all([
+      const [loadsRes, bookingsRes, usersRes, biltiesRes] = await Promise.all([
         api.get("/load/available"),
         api.get("/booking/all"),
-        api.get("/users")
+        api.get("/users"),
+        api.get("/bilty")
       ]);
       setLoads(loadsRes.data);
       setBookings(bookingsRes.data);
       setUsers(usersRes.data);
-    } catch (err) {
-      console.error("Fetch error:", err);
+      setBilties(biltiesRes.data);
+    } catch (error) {
+      console.error("Fetch error:", error);
     } finally {
       setLoading(false);
     }
@@ -36,254 +84,217 @@ export default function AdminDashboard() {
   const findMatch = async (loadId) => {
     try {
       const res = await api.get(`/match/${loadId}`);
-      setMatchingTrucks(prev => ({ ...prev, [loadId]: res.data }));
-    } catch (err) {
-      alert("Error finding matches");
+      setMatchingTrucks((prev) => ({ ...prev, [loadId]: res.data }));
+    } catch (error) {
+      console.error("Error finding matches:", error);
+      toast.error("Error finding matches");
     }
   };
 
   const createBooking = async (loadId, truckId) => {
     try {
       await api.post("/booking/create", { loadId, truckId });
-      alert("Booking Created Successfully!");
+      toast.success("Booking Created Successfully!");
       fetchData();
-      setMatchingTrucks(prev => {
+      setMatchingTrucks((prev) => {
         const next = { ...prev };
         delete next[loadId];
         return next;
       });
-    } catch (err) {
-      alert("Error creating booking");
+    } catch (error) {
+      console.error("Error creating booking:", error);
+      toast.error("Error creating booking");
     }
   };
 
-  const recordPayment = async (bookingId) => {
+  const recordPayment = async (bookingId, status) => {
     try {
-      await api.post(`/booking/${bookingId}/payment`, { status: 'paid' });
-      alert("Payment Recorded Successfully!");
+      await api.post(`/booking/${bookingId}/payment`, { status });
+      toast.success(
+        status === "paid"
+          ? "Payment Recorded Successfully!"
+          : "Payment status reset to pending."
+      );
       fetchData();
-    } catch (err) {
-      alert("Error recording payment");
+    } catch (error) {
+      console.error("Error recording payment:", error);
+      toast.error("Error recording payment");
     }
   };
 
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://fleetiva-roadlines.onrender.com/api";
+  const createBilty = async (event) => {
+    event.preventDefault();
+    try {
+      await api.post("/bilty", newBilty);
+      toast.success("Bilty Created Successfully!");
+      setNewBilty({
+        booking: "",
+        lrNumber: "",
+        consignorName: "",
+        consigneeName: "",
+        pickupLocation: "",
+        dropLocation: "",
+        materialType: "",
+        weight: "",
+        truckType: "",
+        driverName: "",
+        driverPhone: "",
+        vehicleNumber: "",
+        freightAmount: "",
+        advancePaid: "",
+        balanceAmount: "",
+        paymentMode: "cash",
+        shipmentStatus: "assigned"
+      });
+      fetchData();
+    } catch (error) {
+      console.error("Error creating bilty:", error);
+      toast.error("Error creating bilty");
+    }
+  };
 
-  const downloadBilty = (id) => window.open(`${API_BASE}/booking/${id}/bilty?token=${localStorage.getItem("accessToken")}`, "_blank");
-  const downloadInvoice = (id) => window.open(`${API_BASE}/booking/${id}/invoice?token=${localStorage.getItem("accessToken")}`, "_blank");
+  const startEditBilty = (bilty) => {
+    setEditingBiltyId(bilty._id);
+    setBiltyForm({
+      booking: bilty.booking?._id || "",
+      lrNumber: bilty.lrNumber || "",
+      consignorName: bilty.consignorName || "",
+      consigneeName: bilty.consigneeName || "",
+      pickupLocation: bilty.pickupLocation || "",
+      dropLocation: bilty.dropLocation || "",
+      materialType: bilty.materialType || "",
+      weight: bilty.weight || "",
+      truckType: bilty.truckType || "",
+      driverName: bilty.driverName || "",
+      driverPhone: bilty.driverPhone || "",
+      vehicleNumber: bilty.vehicleNumber || "",
+      freightAmount: bilty.freightAmount || "",
+      advancePaid: bilty.advancePaid || "",
+      balanceAmount: bilty.balanceAmount || "",
+      paymentMode: bilty.paymentMode || "cash",
+      shipmentStatus: bilty.shipmentStatus || "assigned"
+    });
+  };
 
-  const filteredLoads = loads.filter(load => {
-    const matchesSearch = 
+  const updateBilty = async (event) => {
+    event.preventDefault();
+    try {
+      const { booking: _booking, ...payload } = biltyForm;
+      await api.patch(`/bilty/${editingBiltyId}`, payload);
+      toast.success("Bilty Updated Successfully!");
+      setEditingBiltyId(null);
+      fetchData();
+    } catch (error) {
+      console.error("Error updating bilty:", error);
+      toast.error("Error updating bilty");
+    }
+  };
+
+  const deleteBilty = async (biltyId) => {
+    if (!window.confirm("Delete this bilty record?")) return;
+    try {
+      await api.delete(`/bilty/${biltyId}`);
+      toast.success("Bilty Deleted Successfully!");
+      fetchData();
+    } catch (error) {
+      console.error("Error deleting bilty:", error);
+      toast.error("Error deleting bilty");
+    }
+  };
+
+  const cancelEditBilty = () => {
+    setEditingBiltyId(null);
+  };
+
+  const handleBiltyChange = (setter) => (event) => {
+    const { name, value } = event.target;
+    setter((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const downloadBilty = async (id) => {
+    try {
+      await downloadFile(`/booking/${id}/bilty`, `bilty-${id}.pdf`);
+      toast.success("Bilty downloaded successfully");
+    } catch {
+      toast.error("Failed to download Bilty");
+    }
+  };
+
+  const downloadInvoice = async (id) => {
+    try {
+      await downloadFile(`/booking/${id}/invoice`, `invoice-${id}.pdf`);
+      toast.success("Invoice downloaded successfully");
+    } catch {
+      toast.error("Failed to download Invoice");
+    }
+  };
+
+  const filteredLoads = loads.filter((load) => {
+    const matchesSearch =
       load.material.toLowerCase().includes(searchTerm.toLowerCase()) ||
       load.from.toLowerCase().includes(searchTerm.toLowerCase()) ||
       load.to.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === "all" || load.status === statusFilter;
-    
+
+    const matchesStatus =
+      statusFilter === "all" || load.status === statusFilter;
+
     return matchesSearch && matchesStatus;
   });
 
   return (
-    <div style={styles.container}>
-      <div style={styles.content}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h2 style={styles.title}>Admin Dashboard</h2>
+    <div className="page">
+      <Helmet>
+        <title>Admin Dashboard - Fleetiva Roadlines</title>
+        <meta name="description" content="Administer users, match loads with trucks, and manage bookings." />
+      </Helmet>
+      <div className="page-content">
+        <div className="page-header">
+          <div>
+            <h2 className="page-title">Admin Dashboard</h2>
+            <p className="page-subtitle">
+              Monitor users, match loads, and track active bookings in real time.
+            </p>
+          </div>
         </div>
 
-        <h3 style={styles.sectionTitle}>User Management</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '15px', marginBottom: '30px' }}>
-          {users.map(user => (
-            <div 
-              key={user._id} 
-              style={styles.card}
-            >
-              <p style={{ margin: 0, fontWeight: '600' }}>{user.name}</p>
-              <p style={{ margin: '5px 0', fontSize: '0.9rem', color: '#6b7280' }}>{user.phone}</p>
-              <span style={{ ...styles.roleBadge, backgroundColor: user.role === 'driver' ? '#dcfce7' : '#dbeafe', color: user.role === 'driver' ? '#166534' : '#1e40af' }}>{user.role}</span>
-            </div>
-          ))}
-        </div>
+        <div className="stack">
+          <UserSection users={users} />
 
-        <h3 style={styles.sectionTitle}>Available Loads</h3>
-        <div style={styles.filterBar}>
-          <input 
-            type="text" 
-            placeholder="Search material or location..." 
-            style={styles.searchInput}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+          <LoadSection
+            loading={loading}
+            filteredLoads={filteredLoads}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            findMatch={findMatch}
+            matchingTrucks={matchingTrucks}
+            createBooking={createBooking}
           />
-          <select 
-            style={styles.selectInput}
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="all">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="matched">Matched</option>
-            <option value="delivered">Delivered</option>
-          </select>
+
+          <BookingSection
+            bookings={bookings}
+            downloadBilty={downloadBilty}
+            downloadInvoice={downloadInvoice}
+            recordPayment={recordPayment}
+          />
+
+          <BiltySection
+            bilties={bilties}
+            newBilty={newBilty}
+            setNewBilty={setNewBilty}
+            handleBiltyChange={handleBiltyChange}
+            createBilty={createBilty}
+            editingBiltyId={editingBiltyId}
+            biltyForm={biltyForm}
+            setBiltyForm={setBiltyForm}
+            startEditBilty={startEditBilty}
+            updateBilty={updateBilty}
+            deleteBilty={deleteBilty}
+            cancelEditBilty={cancelEditBilty}
+          />
         </div>
-
-        {loading ? <p>Loading...</p> : filteredLoads.map(load => (
-          <div 
-            key={load._id} 
-            style={{...styles.card, ...(hoveredCard === load._id ? styles.cardHover : {})}}
-            onMouseEnter={() => setHoveredCard(load._id)}
-            onMouseLeave={() => setHoveredCard(null)}
-          >
-            <p style={styles.cardText}><strong>{load.material}</strong> ({load.requiredCapacity}T) | {load.from} → {load.to}</p>
-            <button style={styles.button} onClick={() => findMatch(load._id)}>Find Matching Trucks</button>
-            {matchingTrucks[load._id]?.map(truck => (
-              <div key={truck._id} style={styles.matchItem}>
-                {truck.vehicleNumber} ({truck.capacity}T) 
-                <button style={styles.smallButton} onClick={() => createBooking(load._id, truck._id)}>Assign Truck</button>
-              </div>
-            ))}
-          </div>
-        ))}
-
-        <h3 style={styles.sectionTitle}>Active Bookings</h3>
-        {bookings.map(b => (
-          <div 
-            key={b._id} 
-            style={{...styles.card, ...(hoveredCard === b._id ? styles.cardHover : {})}}
-            onMouseEnter={() => setHoveredCard(b._id)}
-            onMouseLeave={() => setHoveredCard(null)}
-          >
-            <p style={styles.cardText}>Booking: {b._id.slice(-6)} | Status: <strong style={{color: '#2563eb'}}>{b.status}</strong> | Payment: <strong>{b.paymentStatus}</strong></p>
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-              <button style={styles.secondaryButton} onClick={() => downloadBilty(b._id)}>Download Bilty</button>
-              <button style={styles.secondaryButton} onClick={() => downloadInvoice(b._id)}>Download Invoice</button>
-              {b.paymentStatus !== 'paid' && (
-                <button onClick={() => recordPayment(b._id)} style={styles.paymentButton}>Record Payment</button>
-              )}
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    minHeight: "calc(100vh - 64px)",
-    display: "flex",
-    justifyContent: "center",
-    background: "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
-    padding: "40px 20px",
-  },
-  content: {
-    width: "100%",
-    maxWidth: "1000px",
-  },
-  filterBar: {
-    display: 'flex',
-    gap: '15px',
-    marginBottom: '20px',
-    flexWrap: 'wrap'
-  },
-  searchInput: {
-    flex: 1,
-    minWidth: '200px',
-    padding: '10px 15px',
-    borderRadius: '8px',
-    border: '1px solid #d1d5db',
-    outline: 'none',
-  },
-  selectInput: {
-    padding: '10px 15px',
-    borderRadius: '8px',
-    border: '1px solid #d1d5db',
-    backgroundColor: '#fff',
-    outline: 'none',
-    cursor: 'pointer'
-  },
-  title: {
-    fontSize: "28px",
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: "30px",
-  },
-  sectionTitle: {
-    fontSize: "20px",
-    fontWeight: "600",
-    color: "#374151",
-    marginTop: "40px",
-    marginBottom: "20px",
-    borderBottom: "2px solid #e5e7eb",
-    paddingBottom: "10px",
-  },
-  card: {
-    backgroundColor: "#ffffff",
-    padding: "20px",
-    borderRadius: "10px",
-    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-    border: "1px solid #e5e7eb",
-    marginBottom: "15px",
-    transition: "transform 0.2s, box-shadow 0.2s",
-  },
-  cardHover: {
-    transform: "translateY(-4px)",
-    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-  },
-  roleBadge: {
-    fontSize: '0.75rem',
-    padding: '2px 8px',
-    borderRadius: '12px',
-    textTransform: 'capitalize',
-    fontWeight: '600'
-  },
-  cardText: {
-    fontSize: "16px",
-    color: "#4b5563",
-    marginBottom: "15px",
-  },
-  button: {
-    padding: "8px 16px",
-    backgroundColor: "#2563eb",
-    color: "#fff",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer",
-    fontWeight: "500",
-  },
-  secondaryButton: {
-    padding: "8px 16px",
-    backgroundColor: "#f3f4f6",
-    color: "#374151",
-    border: "1px solid #d1d5db",
-    borderRadius: "6px",
-    cursor: "pointer",
-    fontWeight: "500",
-  },
-  paymentButton: {
-    padding: "8px 16px",
-    backgroundColor: "#e8f5e9",
-    color: "#2e7d32",
-    border: "1px solid #a5d6a7",
-    borderRadius: "6px",
-    cursor: "pointer",
-    fontWeight: "500",
-  },
-  matchItem: {
-    marginLeft: "20px",
-    marginTop: "10px",
-    padding: "12px",
-    backgroundColor: "#f9fafb",
-    borderRadius: "8px",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  smallButton: {
-    padding: "6px 12px",
-    backgroundColor: "#10b981",
-    color: "#fff",
-    border: "none",
-    borderRadius: "4px",
-    cursor: "pointer",
-    fontSize: "14px",
-  }
-};

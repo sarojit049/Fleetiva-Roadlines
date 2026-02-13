@@ -1,82 +1,136 @@
 import { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import { downloadFile } from "../utils/download";
+import toast from "react-hot-toast";
+import Skeleton from "../components/Skeleton";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get("/customer/bookings").then(res => setBookings(res.data));
+    api
+
+      .get("/booking/customer/bookings")
+      .then((res) => setBookings(res.data))
+      .catch((error) => console.error("Fetch error:", error))
+
+      .finally(() => setLoading(false));
   }, []);
 
-  const logout = () => { localStorage.clear(); window.location.href = "/login"; };
+  const downloadBilty = async (id) => {
+    try {
+      await downloadFile(`/booking/${id}/bilty`, `bilty-${id}.pdf`);
+      toast.success("Bilty downloaded successfully");
+    } catch {
+      toast.error("Failed to download Bilty");
+    }
+  };
+
+  const downloadInvoice = async (id) => {
+    try {
+      await downloadFile(`/booking/${id}/invoice`, `invoice-${id}.pdf`);
+      toast.success("Invoice downloaded successfully");
+    } catch {
+      toast.error("Failed to download Invoice");
+    }
+  };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.content}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "30px" }}>
-          <h2 style={styles.title}>Customer Dashboard</h2>
-          <button onClick={() => navigate("/post-load")} style={styles.button}>Post New Load</button>
-        </div>
-        
-        <h3 style={styles.sectionTitle}>Your Bookings</h3>
-        {bookings.map(b => (
-          <div key={b._id} style={styles.card}>
-            <p style={styles.cardText}><strong>{b.load?.material}</strong> | {b.from} → {b.to}</p>
-            <p style={styles.cardText}>Status: <strong style={{color: '#2563eb'}}>{b.status}</strong></p>
+    <div className="page dashboard-page">
+      <div className="page-content">
+        <div className="page-header dashboard-header">
+          <div className="dashboard-header-text">
+            <h2 className="page-title">Customer Dashboard</h2>
+            <p className="page-subtitle">
+              Track your active shipments and post new loads in seconds.
+            </p>
           </div>
-        ))}
+          <button
+            className="btn btn-primary dashboard-cta"
+            onClick={() => navigate("/post-load")}
+          >
+            Post New Load
+          </button>
+        </div>
+
+        <section className="stack dashboard-section">
+          <h3 className="section-title">Your Bookings</h3>
+          {loading ? (
+            <div className="dashboard-booking-list">
+              {[1, 2, 3].map((n) => (
+                <div key={n} className="dashboard-card" style={{ padding: "20px" }}>
+                  <Skeleton width="60%" height="24px" />
+                  <div style={{ marginTop: "8px" }}>
+                    <Skeleton width="40%" height="16px" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : bookings.length === 0 ? (
+            <div className="dashboard-card dashboard-card-empty">
+              <span className="dashboard-empty-icon" aria-hidden="true">
+                📦
+              </span>
+              <p className="dashboard-empty-title">No bookings yet</p>
+              <p className="dashboard-empty-desc">
+                Post your first load to start receiving matches.
+              </p>
+              <button
+                className="btn btn-primary"
+                onClick={() => navigate("/post-load")}
+              >
+                Post a load
+              </button>
+            </div>
+          ) : (
+            <div className="dashboard-booking-list">
+              {bookings.map((b) => (
+                <div
+                  key={b._id}
+                  className="dashboard-card dashboard-booking-card"
+                >
+                  <div className="dashboard-booking-main">
+                    <p className="dashboard-booking-title">
+                      {b.load?.material || "Load"}
+                    </p>
+                    <p className="dashboard-booking-route text-muted">
+                      {b.from} → {b.to}
+                    </p>
+                  </div>
+                  <span
+                    className={`tag ${b.status === "delivered"
+                      ? "success"
+                      : b.status === "in-transit"
+                        ? "info"
+                        : "warning"
+                      }`}
+                  >
+                    {b.status}
+                  </span>
+                  <div className="toolbar" style={{ marginTop: 16 }}>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => downloadBilty(b._id)}
+                    >
+                      Download Bilty
+                    </button>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => downloadInvoice(b._id)}
+                    >
+                      Download Invoice
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    minHeight: "calc(100vh - 64px)",
-    display: "flex",
-    justifyContent: "center",
-    background: "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
-    padding: "40px 20px",
-  },
-  content: {
-    width: "100%",
-    maxWidth: "800px",
-  },
-  title: {
-    fontSize: "28px",
-    fontWeight: "700",
-    color: "#111827",
-    margin: 0,
-  },
-  sectionTitle: {
-    fontSize: "20px",
-    fontWeight: "600",
-    color: "#374151",
-    marginBottom: "20px",
-  },
-  card: {
-    backgroundColor: "#ffffff",
-    padding: "20px",
-    borderRadius: "10px",
-    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-    border: "1px solid #e5e7eb",
-    marginBottom: "15px",
-    transition: "transform 0.2s",
-  },
-  cardText: {
-    fontSize: "16px",
-    color: "#4b5563",
-    margin: "5px 0",
-  },
-  button: {
-    padding: "10px 20px",
-    backgroundColor: "#2563eb",
-    color: "#fff",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer",
-    fontWeight: "600",
-  }
-};

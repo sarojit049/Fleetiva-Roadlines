@@ -8,20 +8,21 @@ const userSchema = new mongoose.Schema(
     password: String,
     role: {
       type: String,
-      enum: ["customer", "driver", "admin"],
+      enum: ["customer", "driver", "admin", "superadmin"],
       default: "customer",
     },
     authProvider: {
       type: String,
-      enum: ["local", "google"],
+      enum: ["local", "google", "firebase"],
       default: "local",
     },
     googleId: { type: String },
+    firebaseUid: { type: String, unique: true, sparse: true },
     companyName: String,
     isVerified: { type: Boolean, default: false },
   },
   { timestamps: true }
-  
+
 );
 
 module.exports = mongoose.model("User", userSchema);

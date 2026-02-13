@@ -1,0 +1,5 @@
+- [x] Resolve conflict in frontend/src/App.jsx by adopting firebase-based routing with context and navbar
+- [x] Resolve conflict in frontend/src/pages/Login.jsx by uncommenting firebase imports
+- [x] Resolve conflict in frontend/src/pages/Register.jsx by switching to firebase registration and adding email input
+- [x] Add resolved files to git
+- [x] Continue rebase

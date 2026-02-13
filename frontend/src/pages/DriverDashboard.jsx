@@ -1,101 +1,137 @@
 import { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import api from "../api/axios";
+import { toast } from "react-hot-toast";
+import { downloadFile } from "../utils/download";
+import Skeleton from "../components/Skeleton";
 
 export default function DriverDashboard() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [hoveredCard, setHoveredCard] = useState(null);
+
+  const fetchBookings = () =>
+    api
+      .get("/booking/driver/bookings")
+      .then((res) => setBookings(res.data))
+      .catch((error) => console.error("Fetch error:", error))
+      .finally(() => setLoading(false));
 
   useEffect(() => {
     fetchBookings();
   }, []);
 
-  const fetchBookings = () => {
-    setLoading(true);
-    api.get("/driver/bookings")
-      .then(res => setBookings(res.data))
-      .catch(err => console.error("Fetch error:", err))
-      .finally(() => setLoading(false));
-  };
-
   const updateStatus = async (id, status) => {
     try {
+      setLoading(true);
       await api.patch(`/booking/${id}/status`, { status });
+      toast.success(`Status updated to ${status}`);
       fetchBookings();
-    } catch (err) {
-      alert("Failed to update status");
+    } catch (error) {
+      console.error("Failed to update status:", error);
+      toast.error("Failed to update status");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const downloadBilty = async (id) => {
+    try {
+      await downloadFile(`/booking/${id}/bilty`, `bilty-${id}.pdf`);
+      toast.success("Bilty downloaded successfully");
+    } catch {
+      toast.error("Failed to download Bilty");
+    }
+  };
+
+  const downloadInvoice = async (id) => {
+    try {
+      await downloadFile(`/booking/${id}/invoice`, `invoice-${id}.pdf`);
+      toast.success("Invoice downloaded successfully");
+    } catch {
+      toast.error("Failed to download Invoice");
     }
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.content}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h2 style={styles.title}>Driver Dashboard</h2>
-        </div>
-        {loading ? <p>Loading bookings...</p> : bookings.length > 0 ? bookings.map(b => (
-          <div 
-            key={b._id} 
-            style={{...styles.card, ...(hoveredCard === b._id ? styles.cardHover : {})}}
-            onMouseEnter={() => setHoveredCard(b._id)}
-            onMouseLeave={() => setHoveredCard(null)}
-          >
-            <p style={styles.cardText}><strong>{b.from} → {b.to}</strong></p>
-            <p style={styles.cardText}>Status: <strong style={{color: '#2563eb'}}>{b.status}</strong></p>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              {b.status === "assigned" && <button style={styles.button} onClick={() => updateStatus(b._id, "in-transit")}>Start Trip</button>}
-              {b.status === "in-transit" && <button style={styles.button} onClick={() => updateStatus(b._id, "delivered")}>Mark Delivered</button>}
-            </div>
+    <div className="page">
+      <Helmet>
+        <title>Driver Dashboard - Fleetiva Roadlines</title>
+        <meta name="description" content="View assigned trips and update delivery status." />
+      </Helmet>
+      <div className="page-content">
+        <div className="page-header">
+          <div>
+            <h2 className="page-title">Driver Dashboard</h2>
+            <p className="page-subtitle">
+              Manage assigned trips and update delivery statuses quickly.
+            </p>
           </div>
-        )) : <p>No active bookings found.</p>}
+        </div>
+        <section className="stack">
+          {loading ? (
+            [1, 2, 3].map((n) => (
+              <div key={n} className="card">
+                <Skeleton width="50%" height="24px" />
+                <div style={{ marginTop: "12px" }}>
+                  <Skeleton width="30%" height="16px" />
+                </div>
+                <div className="toolbar" style={{ marginTop: "16px" }}>
+                  <Skeleton width="100px" height="36px" borderRadius="10px" />
+                  <Skeleton width="100px" height="36px" borderRadius="10px" />
+                </div>
+              </div>
+            ))
+          ) : bookings.length > 0 ? (
+            bookings.map((b) => (
+              <div key={b._id} className="card">
+                <p style={{ margin: 0, fontWeight: 600 }}>
+                  {b.from} → {b.to}
+                </p>
+                <p className="text-muted" style={{ margin: "6px 0 12px" }}>
+                  Status: {b.status}
+                </p>
+                <div className="toolbar">
+                  {b.status === "assigned" && (
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => updateStatus(b._id, "in-transit")}
+                    >
+                      Start Trip
+                    </button>
+                  )}
+                  {b.status === "in-transit" && (
+                    <button
+                      className="btn btn-success"
+                      onClick={() => updateStatus(b._id, "delivered")}
+                    >
+                      Mark Delivered
+                    </button>
+                  )}
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => downloadBilty(b._id)}
+                  >
+                    Bilty PDF
+                  </button>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => downloadInvoice(b._id)}
+                  >
+                    Invoice PDF
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="card">
+              <p style={{ margin: 0, fontWeight: 600 }}>No active bookings found.</p>
+              <p className="text-muted" style={{ margin: "6px 0 0" }}>
+                Check back soon for new assignments.
+              </p>
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    minHeight: "calc(100vh - 64px)",
-    display: "flex",
-    justifyContent: "center",
-    background: "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
-    padding: "40px 20px",
-  },
-  content: {
-    width: "100%",
-    maxWidth: "800px",
-  },
-  title: {
-    fontSize: "28px",
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: "30px",
-  },
-  card: {
-    backgroundColor: "#ffffff",
-    padding: "20px",
-    borderRadius: "10px",
-    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-    border: "1px solid #e5e7eb",
-    marginBottom: "15px",
-    transition: "transform 0.2s, box-shadow 0.2s",
-  },
-  cardHover: {
-    transform: "translateY(-4px)",
-    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-  },
-  cardText: {
-    fontSize: "16px",
-    color: "#4b5563",
-    marginBottom: "10px",
-  },
-  button: {
-    padding: "10px 20px",
-    backgroundColor: "#2563eb",
-    color: "#fff",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer",
-    fontWeight: "600",
-  }
-};
