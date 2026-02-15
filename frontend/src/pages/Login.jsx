@@ -59,45 +59,47 @@ export default function Login() {
     const validationError = validateLoginForm(formData);
     if (validationError) {
       toast.error(validationError);
-      setLoading(false);
       return;
     }
 
     setLoading(true);
 
     try {
-      let role;
-      if (hasFirebaseConfig) {
-        if (!auth) {
-          throw new Error("Firebase auth is unavailable.");
-        }
-        const credential = await signInWithEmailAndPassword(
-          auth,
-          formData.email,
-          formData.password,
-        );
-        const idToken = await credential.user.getIdToken();
-        role = await exchangeFirebaseToken(idToken);
-      } else {
-        const response = await api.post("/auth/login", formData);
-        safeStorage.set("accessToken", response.data.accessToken);
-        safeStorage.set("role", response.data.user.role);
-        setUser(response.data.user);
-        role = response.data.user.role;
-      }
+      // Always try JWT (backend) login first
+      const response = await api.post("/auth/login", formData);
+      safeStorage.set("accessToken", response.data.accessToken);
+      safeStorage.set("role", response.data.user.role);
+      setUser(response.data.user);
+      const role = response.data.user.role;
 
-      if (role === "admin") navigate("/admin", { replace: true });
+      if (role === "superadmin") navigate("/superadmin", { replace: true });
+      else if (role === "admin") navigate("/admin", { replace: true });
       else if (role === "driver") navigate("/driver", { replace: true });
       else navigate("/dashboard", { replace: true });
     } catch (err) {
-      if (err.response) {
-        toast.error(
-          err.response.data?.message ||
-          "Login service is currently unavailable. Please try again later.",
-        );
-      } else {
-        toast.error(formatFirebaseError(err));
+      // If backend login fails AND Firebase is available, try Firebase
+      if (hasFirebaseConfig && auth && err.response?.status === 401) {
+        try {
+          const credential = await signInWithEmailAndPassword(
+            auth,
+            formData.email,
+            formData.password,
+          );
+          const idToken = await credential.user.getIdToken();
+          const role = await exchangeFirebaseToken(idToken);
+          if (role === "superadmin") navigate("/superadmin", { replace: true });
+          else if (role === "admin") navigate("/admin", { replace: true });
+          else if (role === "driver") navigate("/driver", { replace: true });
+          else navigate("/dashboard", { replace: true });
+          return;
+        } catch (firebaseErr) {
+          // Firebase also failed, show backend error
+        }
       }
+      toast.error(
+        err.response?.data?.message ||
+        "Invalid email or password. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
