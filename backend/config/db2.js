@@ -14,6 +14,13 @@ async function connectMongo() {
   if (mongoose.connection.readyState === 1) return;
 
   try {
+    if (!process.env.MONGOMS_VERSION) {
+      process.env.MONGOMS_VERSION = '7.0.14';
+    }
+    if (!process.env.MONGOMS_DISTRO) {
+      process.env.MONGOMS_DISTRO = 'ubuntu-22.04';
+    }
+
     if (uriFromEnv) {
       await mongoose.connect(uriFromEnv, {
         autoIndex: true,

@@ -9,6 +9,10 @@ jobs:
   lint-test:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        node-version: [22]
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -16,7 +20,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: ${{ matrix.node-version }}
           cache: npm
           cache-dependency-path: |
             frontend/package-lock.json
@@ -32,6 +36,8 @@ jobs:
 
       - name: Backend test
         working-directory: backend
+        env:
+          NODE_ENV: test
         run: npm test
 
       - name: Install frontend deps
@@ -45,3 +51,7 @@ jobs:
       - name: Frontend test
         working-directory: frontend
         run: npm run test
+
+      - name: Frontend build
+        working-directory: frontend
+        run: npm run build

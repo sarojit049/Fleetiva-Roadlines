@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import api from "../api/axios";
 import { useNavigate, Link } from "react-router-dom";
+import { toast } from "react-hot-toast";
 
 export default function ForgotPassword() {
-  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -26,12 +27,17 @@ export default function ForgotPassword() {
 
   const handleRequest = async (e) => {
     e.preventDefault();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error("Enter a valid email address.");
+      return;
+    }
     setLoading(true);
     try {
-      await api.post("/auth/forgot-password", { phone });
+      await api.post("/auth/forgot-password", { email });
       setStep("reset");
+      toast.success("OTP sent to your email!");
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to send OTP");
+      toast.error(err.response?.data?.message || "Failed to send OTP");
     } finally {
       setLoading(false);
     }
@@ -39,12 +45,20 @@ export default function ForgotPassword() {
 
   const handleReset = async (e) => {
     e.preventDefault();
+    if (!/^\d{6}$/.test(otp)) {
+      toast.error("Enter a valid 6-digit OTP.");
+      return;
+    }
+    if (newPassword.length < 8) {
+      toast.error("Password must be at least 8 characters.");
+      return;
+    }
     setLoading(true);
     try {
-      await api.post("/auth/reset-password", { phone, otp, newPassword });
+      await api.post("/auth/reset-password", { email, otp, newPassword });
       setSuccess(true);
     } catch (err) {
-      alert(err.response?.data?.message || "Reset failed");
+      toast.error(err.response?.data?.message || "Reset failed");
     } finally {
       setLoading(false);
     }
@@ -55,7 +69,7 @@ export default function ForgotPassword() {
       <div className="auth-card">
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           <h2 className="page-title">Reset Password</h2>
-          <p className="page-subtitle">Recover access to your account.</p>
+          <p className="page-subtitle">Recover access to your account via Email.</p>
         </div>
 
         {success ? (
@@ -68,13 +82,14 @@ export default function ForgotPassword() {
           </div>
         ) : step === "request" ? (
           <form onSubmit={handleRequest} className="form">
-            <label className="label">Phone Number</label>
+            <label className="label">Email Address</label>
             <input
-              placeholder="Enter registered phone"
-              type="tel"
+              placeholder="Enter registered email"
+              type="email"
               required
               className="input"
-              onChange={(e) => setPhone(e.target.value)}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
             <button type="submit" disabled={loading} className="btn btn-primary">
               {loading ? <div className="spinner"></div> : "Send Reset OTP"}
@@ -82,11 +97,12 @@ export default function ForgotPassword() {
           </form>
         ) : (
           <form onSubmit={handleReset} className="form">
-            <label className="label">OTP sent to {phone}</label>
+            <label className="label">OTP sent to {email}</label>
             <input
               placeholder="6-digit code"
               required
               className="input"
+              value={otp}
               onChange={(e) => setOtp(e.target.value)}
             />
             <label className="label">New Password</label>
@@ -95,6 +111,7 @@ export default function ForgotPassword() {
               type="password"
               required
               className="input"
+              value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
             />
             <button type="submit" disabled={loading} className="btn btn-primary">

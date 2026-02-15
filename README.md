@@ -103,21 +103,160 @@ Before running this project locally, ensure you have:
 
 ## 🚀 Local Development
 
-### Backend
+### Option 1: Docker Compose (Recommended for Quick Setup)
+
+The easiest way to get started is using Docker Compose, which sets up the entire stack with a single command:
+
+#### Prerequisites
+- [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/) installed
+- At least 4GB of free disk space
+
+#### Quick Start with Helper Script
+
+We provide convenient scripts for easy setup:
+
+**Linux/Mac:**
+```bash
+git clone https://github.com/sarojit049/Fleetiva-Roadlines.git
+cd Fleetiva-Roadlines
+./docker-start.sh
+```
+
+**Windows:**
+```cmd
+git clone https://github.com/sarojit049/Fleetiva-Roadlines.git
+cd Fleetiva-Roadlines
+docker-start.bat
+```
+
+The script will:
+- ✅ Check if Docker is installed
+- ✅ Create `.env` file from `.env.example` if needed
+- ✅ Provide an interactive menu for managing services
+
+#### Manual Quick Start
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/sarojit049/Fleetiva-Roadlines.git
+   cd Fleetiva-Roadlines
+   ```
+
+2. **Set up environment variables**
+   ```bash
+   cp .env.example .env
+   # Edit .env file with your configuration (optional - defaults are set)
+   ```
+
+3. **Start all services**
+   ```bash
+   docker-compose up --build
+   ```
+
+   This command will:
+   - Build the Node.js backend container
+   - Start MongoDB with persistent storage
+   - Start Redis for caching/OTP
+   - Connect all services automatically
+
+4. **Access the application**
+   - Backend API: `http://localhost:5000`
+   - MongoDB: `localhost:27017` (username: `admin`, password: `password`)
+   - Redis: `localhost:6379` (password: `redispassword`)
+
+5. **Stop the services**
+   ```bash
+   docker-compose down
+   ```
+
+   To remove volumes (database data):
+   ```bash
+   docker-compose down -v
+   ```
+
+#### Docker Compose Services
+
+The `docker-compose.yml` includes:
+- **backend**: Node.js Express API server
+- **mongo**: MongoDB 7.0 with persistent volumes
+- **redis**: Redis 7 Alpine with persistence
+
+#### Useful Docker Commands
+
+```bash
+# View logs
+docker-compose logs -f backend
+
+# Restart a specific service
+docker-compose restart backend
+
+# Run commands in backend container
+docker-compose exec backend npm test
+
+# Check service status
+docker-compose ps
+```
+
+**📖 For detailed Docker documentation, see [DOCKER_SETUP.md](DOCKER_SETUP.md)**
+
+---
+
+### Option 2: Manual Setup (Traditional Development)
+
+If you prefer to run services manually or need more control:
+
+#### Backend
 ```bash
 cd backend
 npm install
 cp .env.example .env
+# Make sure MongoDB and Redis are running locally
 npm run dev
 ```
 
-### Frontend
+#### Frontend
 ```bash
 cd frontend
 npm install
 cp .env.example .env
 npm run dev
 ```
+
+---
+
+## 🐳 Docker Configuration
+
+### Environment Variables for Docker
+
+The `.env.example` file is configured with Docker-friendly defaults. Key differences from manual setup:
+
+- **MONGO_URI**: Uses Docker service name `mongo:27017` instead of `localhost`
+- **REDIS_URL**: Uses Docker service name `redis:6379` instead of `localhost`
+- MongoDB credentials are set via `MONGO_ROOT_USERNAME` and `MONGO_ROOT_PASSWORD`
+- Redis password is set via `REDIS_PASSWORD`
+
+### Persistent Data
+
+Docker volumes ensure your data persists across container restarts:
+- `mongo_data`: MongoDB database files
+- `mongo_config`: MongoDB configuration
+- `redis_data`: Redis persistence files
+
+### Networking
+
+All services communicate through the `fleetiva-network` bridge network, ensuring:
+- Isolated network environment
+- Service discovery by container name
+- No need for external IP addresses
+
+### Production Notes
+
+For production deployment with Docker:
+1. Change default passwords in `.env`
+2. Use Docker secrets for sensitive data
+3. Consider using Docker Swarm or Kubernetes for orchestration
+4. Set up proper backup strategies for volumes
+5. Configure resource limits in `docker-compose.yml`
 
 ---
 

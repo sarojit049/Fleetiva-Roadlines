@@ -4,7 +4,13 @@ const bcrypt = require('bcryptjs');
 const admin = require('firebase-admin');
 const User = require('../models/User');
 const LoginLog = require('../models/LoginLog');
-const { twilioClient, redisClient } = require('../config/clients');
+const { redisClient } = require('../config/clients');
+const sendEmail = require('../utils/email');
+const { registerSchema, loginSchema, firebaseRegisterSchema, forgotPasswordSchema, resetPasswordSchema } = require('../validations/authValidation');
+const asyncHandler = require('../utils/asyncHandler');
+
+// Fallback in-memory OTP store if Redis is unavailable
+const otpStore = new Map();
 
 const router = express.Router();
 
@@ -21,8 +27,15 @@ const setAuthCookie = (res, token) => {
   });
 };
 
+const getJwtSecret = () => {
+  if (!process.env.ACCESS_TOKEN_SECRET) {
+    throw new Error('ACCESS_TOKEN_SECRET is not set.');
+  }
+  return process.env.ACCESS_TOKEN_SECRET;
+};
+
 const signToken = (user) =>
-  jwt.sign({ userId: user._id, role: user.role }, process.env.ACCESS_TOKEN_SECRET, {
+  jwt.sign({ userId: user._id, role: user.role }, getJwtSecret(), {
     expiresIn: ACCESS_TOKEN_TTL,
   });
 
@@ -39,21 +52,21 @@ const logLoginAttempt = ({ req, user, email, provider, status, reason }) =>
     reason,
     ip: req.ip,
     userAgent: req.get('user-agent'),
-  }).catch(() => {});
+  }).catch(() => { });
 
-router.post('/register', async (req, res) => {
-  const { name, email, phone, password, role = 'customer', companyName } = req.body;
-
-  if (!name || !email || !phone || !password) {
-    return res.status(400).json({ message: 'Name, email, phone, and password are required.' });
+router.post('/register', asyncHandler(async (req, res) => {
+  const { error, value } = registerSchema.validate(req.body, { abortEarly: false });
+  if (error) {
+    return res.status(400).json({
+      message: 'Validation failed',
+      errors: error.details.map(detail => ({ field: detail.path.join('.'), message: detail.message }))
+    });
   }
+
+  const { name, email, phone, password, role, companyName } = value;
 
   if (!validatePassword(password)) {
     return res.status(400).json({ message: 'Password must be at least 8 characters.' });
-  }
-
-  if (!['customer', 'driver', 'admin'].includes(role)) {
-    return res.status(400).json({ message: 'Invalid role.' });
   }
 
   const existing = await User.findOne({ email });
@@ -87,20 +100,18 @@ router.post('/register', async (req, res) => {
       companyName: user.companyName,
     },
   });
-});
+}));
 
-router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    await logLoginAttempt({
-      req,
-      email,
-      provider: 'local',
-      status: 'failure',
-      reason: 'missing_credentials',
+router.post('/login', asyncHandler(async (req, res) => {
+  const { error } = loginSchema.validate(req.body, { abortEarly: false });
+  if (error) {
+    return res.status(400).json({
+      message: 'Validation failed',
+      errors: error.details.map(detail => ({ field: detail.path.join('.'), message: detail.message }))
     });
-    return res.status(400).json({ message: 'Email and password are required.' });
   }
+
+  const { email, password } = req.body;
 
   const user = await User.findOne({ email });
   if (!user || !user.password) {
@@ -141,9 +152,9 @@ router.post('/login', async (req, res) => {
       companyName: user.companyName,
     },
   });
-});
+}));
 
-router.post('/firebase/login', async (req, res) => {
+router.post('/firebase/login', asyncHandler(async (req, res) => {
   const { idToken } = req.body;
   if (!idToken) {
     await logLoginAttempt({
@@ -195,16 +206,19 @@ router.post('/firebase/login', async (req, res) => {
       companyName: user.companyName,
     },
   });
-});
+}));
 
-router.post('/firebase/register', async (req, res) => {
-  const { idToken, name, phone, role = 'customer', companyName } = req.body;
-  if (!idToken || !name || !phone) {
-    return res.status(400).json({ message: 'ID token, name, and phone are required.' });
+router.post('/firebase/register', asyncHandler(async (req, res) => {
+  const { error, value } = firebaseRegisterSchema.validate(req.body, { abortEarly: false });
+  if (error) {
+    return res.status(400).json({
+      message: 'Validation failed',
+      errors: error.details.map(detail => ({ field: detail.path.join('.'), message: detail.message }))
+    });
   }
-  if (!['customer', 'driver', 'admin'].includes(role)) {
-    return res.status(400).json({ message: 'Invalid role.' });
-  }
+
+  const { idToken, name, phone, role, companyName } = value;
+
   if (!firebaseReady()) {
     return res.status(503).json({ message: 'Firebase authentication unavailable.' });
   }
@@ -242,72 +256,90 @@ router.post('/firebase/register', async (req, res) => {
       companyName: user.companyName,
     },
   });
-});
+}));
 
 router.post('/logout', (req, res) => {
   res.clearCookie('accessToken');
   res.json({ message: 'Logged out' });
 });
 
-router.get('/me', require('../middleware/combinedAuth').authenticate, async (req, res) => {
+router.get('/me', require('../middleware/combinedAuth').authenticate, asyncHandler(async (req, res) => {
   const user = await User.findById(req.user.userId).select('-password');
   if (!user) return res.status(404).json({ message: 'User not found.' });
   res.json({ user });
-});
+}));
 
-router.post('/forgot-password', async (req, res) => {
-  const { phone } = req.body;
-  if (!phone) return res.status(400).json({ message: 'Phone is required.' });
-
-  const user = await User.findOne({ phone });
-  if (!user) return res.status(404).json({ message: 'User not found.' });
-
-  if (!redisClient) {
-    return res.status(503).json({ message: 'OTP service unavailable.' });
+router.post('/forgot-password', asyncHandler(async (req, res) => {
+  const { error, value } = forgotPasswordSchema.validate(req.body, { abortEarly: false });
+  if (error) {
+    return res.status(400).json({
+      message: 'Validation failed',
+      errors: error.details.map(detail => ({ field: detail.path.join('.'), message: detail.message }))
+    });
   }
+
+  const { email } = value;
+
+
+  // check removed to ensure OTP sends regardless of user existence
 
   const otp = `${Math.floor(100000 + Math.random() * 900000)}`;
-  await redisClient.set(`otp:${phone}`, otp, { EX: OTP_TTL_SECONDS });
 
-  if (!twilioClient) {
-    return res.status(503).json({ message: 'SMS service unavailable.' });
+  // Store OTP (Redis or Memory)
+  if (redisClient) {
+    await redisClient.set(`otp:${email}`, otp, { EX: OTP_TTL_SECONDS });
+  } else {
+    otpStore.set(email, { otp, expires: Date.now() + OTP_TTL_SECONDS * 1000 });
   }
 
-  await twilioClient.messages.create({
-    body: `Your Fleetiva OTP is ${otp}. It expires in ${Math.floor(OTP_TTL_SECONDS / 60)} minutes.`,
-    from: process.env.TWILIO_FROM_NUMBER,
-    to: phone,
-  });
+  await sendEmail(
+    email,
+    'Your Fleetiva OTP Code',
+    `<p>Your Fleetiva OTP is <strong>${otp}</strong>.</p><p>It expires in ${Math.floor(OTP_TTL_SECONDS / 60)} minutes.</p>`
+  );
 
   res.json({ message: 'OTP sent successfully.' });
-});
+}));
 
-router.post('/reset-password', async (req, res) => {
-  const { phone, otp, newPassword } = req.body;
-  if (!phone || !otp || !newPassword) {
-    return res.status(400).json({ message: 'Phone, OTP, and new password are required.' });
+router.post('/reset-password', asyncHandler(async (req, res) => {
+  const { error, value } = resetPasswordSchema.validate(req.body, { abortEarly: false });
+  if (error) {
+    return res.status(400).json({
+      message: 'Validation failed',
+      errors: error.details.map(detail => ({ field: detail.path.join('.'), message: detail.message }))
+    });
   }
 
-  if (!validatePassword(newPassword)) {
-    return res.status(400).json({ message: 'Password must be at least 8 characters.' });
+  const { email, otp, newPassword } = value;
+  let storedOtp = null;
+
+  if (redisClient) {
+    storedOtp = await redisClient.get(`otp:${email}`);
+  } else {
+    const data = otpStore.get(email);
+    if (data && data.expires > Date.now()) {
+      storedOtp = data.otp;
+    } else {
+      otpStore.delete(email); // Cleanup expired
+    }
   }
 
-  if (!redisClient) {
-    return res.status(503).json({ message: 'OTP service unavailable.' });
-  }
-
-  const storedOtp = await redisClient.get(`otp:${phone}`);
   if (!storedOtp || storedOtp !== otp) {
     return res.status(400).json({ message: 'Invalid or expired OTP.' });
   }
 
   const hashed = await bcrypt.hash(newPassword, 12);
-  const user = await User.findOneAndUpdate({ phone }, { password: hashed }, { new: true });
+  const user = await User.findOneAndUpdate({ email }, { password: hashed }, { new: true });
   if (!user) return res.status(404).json({ message: 'User not found.' });
 
-  await redisClient.del(`otp:${phone}`);
+  // Cleanup OTP
+  if (redisClient) {
+    await redisClient.del(`otp:${email}`);
+  } else {
+    otpStore.delete(email);
+  }
 
   res.json({ message: 'Password updated successfully.' });
-});
+}));
 
 module.exports = router;

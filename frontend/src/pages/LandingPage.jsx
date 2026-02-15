@@ -1,8 +1,17 @@
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 
 export default function LandingPage() {
   return (
     <div className="landing-page">
+      <Helmet>
+        <title>Fleetiva Roadlines - Logistics & Transport SaaS</title>
+        <meta
+          name="description"
+          content="Fleetiva Roadlines helps shippers, drivers, and admin teams post loads, match trucks, and track deliveries in real time."
+        />
+        <meta name="robots" content="index, follow" />
+      </Helmet>
       {/* Animated background elements */}
       <div className="bg-gradient-orbs">
         <div className="orb orb-1"></div>

@@ -21,7 +21,7 @@ const errorHandler = (err, req, res, next) => {
     method: req.method,
     url: req.originalUrl,
     statusCode,
-    user: req.user?.id,
+    user: req.user?.userId,
     tenant: req.user?.tenantId,
     ip: req.ip
   }).catch(logErr => console.error("Failed to save system log:", logErr.message));

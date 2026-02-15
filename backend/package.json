@@ -6,18 +6,20 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "test": "echo \"No tests defined\" && exit 0",
+    "test": "jest --runInBand",
     "lint": "echo \"No linting defined\" && exit 0"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
+    "dotenv": "^16.6.1",
     "express": "^4.21.2",
     "firebase-admin": "^13.6.0",
+    "joi": "^18.0.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.9.5",
+    "nodemailer": "^8.0.1",
     "pdfkit": "^0.16.0",
     "redis": "^4.7.0",
     "twilio": "^5.4.0"
@@ -25,6 +27,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "mongodb-memory-server": "^11.0.1"
+    "jest": "^29.7.0",
+    "mongodb-memory-server": "^11.0.1",
+    "supertest": "^7.1.1"
   }
 }
