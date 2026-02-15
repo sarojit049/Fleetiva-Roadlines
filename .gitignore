@@ -4,6 +4,9 @@
 backend/.env
 frontend/.env
 
+# firebase credentials (NEVER commit)
+backend/firebase-service-account.json
+
 # dependencies
 node_modules/
 
@@ -19,7 +22,13 @@ npm-debug.log*
 # vscode
 .vscode/
 
+# vercel local
+.vercel/
+
 # local debug files
 backend/*.txt
 backend/debug-*.js
 backend/test-*.js
+
+# duplicate paths
+frontend/frontend/
