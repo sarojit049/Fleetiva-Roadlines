@@ -23,6 +23,8 @@ try {
 exports.authenticate = async (req, res, next) => {
   try {
     const token = extractToken(req);
+    console.log('Auth Debug - Token:', token ? 'Found' : 'Missing');
+    console.log('Auth Debug - Secret:', process.env.ACCESS_TOKEN_SECRET); // Uncomment to debug secret match
 
     if (!token) {
       return res.status(401).json({ message: 'Unauthorized' });

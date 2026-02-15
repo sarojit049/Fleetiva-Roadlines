@@ -136,6 +136,66 @@ export default function Login() {
         />
       </Helmet>
       <div className="auth-card">
+        {/* Animated Truck Scene */}
+        <div className="truck-scene">
+          {/* Road */}
+          <div className="truck-road">
+            <div className="road-line"></div>
+          </div>
+
+          {/* Truck */}
+          <div className="truck-wrapper">
+            <svg className="truck-svg" viewBox="0 0 120 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Cargo body */}
+              <rect x="2" y="8" width="60" height="28" rx="3" fill="#f59e0b" stroke="#d97706" strokeWidth="1.5" />
+              <rect x="6" y="12" width="52" height="20" rx="2" fill="#fbbf24" opacity="0.6" />
+              <text x="32" y="26" textAnchor="middle" fill="#92400e" fontSize="7" fontWeight="700" fontFamily="sans-serif">FLEETIVA</text>
+              {/* Cabin */}
+              <path d="M62 14 L62 36 L90 36 L90 22 L78 14 Z" fill="#1e3a5f" stroke="#0f172a" strokeWidth="1.5" />
+              {/* Window */}
+              <path d="M65 17 L75 17 L82 23 L65 23 Z" fill="#7dd3fc" opacity="0.9" />
+              <path d="M65 17 L75 17 L82 23 L65 23 Z" fill="url(#windowShine)" opacity="0.4" />
+              {/* Bumper */}
+              <rect x="88" y="28" width="8" height="8" rx="2" fill="#94a3b8" />
+              {/* Headlight */}
+              <rect x="90" y="24" width="4" height="4" rx="1" fill="#fde68a" />
+              <circle cx="92" cy="26" r="3" fill="#fef3c7" opacity="0.4" />
+              {/* Exhaust pipe */}
+              <rect x="0" y="30" width="4" height="3" rx="1" fill="#64748b" />
+              {/* Wheels */}
+              <circle cx="22" cy="38" r="7" fill="#334155" stroke="#1e293b" strokeWidth="1.5" />
+              <circle cx="22" cy="38" r="3" fill="#64748b" className="truck-wheel" />
+              <circle cx="80" cy="38" r="7" fill="#334155" stroke="#1e293b" strokeWidth="1.5" />
+              <circle cx="80" cy="38" r="3" fill="#64748b" className="truck-wheel" />
+              {/* Wheel spokes */}
+              <g className="truck-wheel-spin">
+                <line x1="22" y1="32" x2="22" y2="44" stroke="#475569" strokeWidth="1" />
+                <line x1="16" y1="38" x2="28" y2="38" stroke="#475569" strokeWidth="1" />
+              </g>
+              <g className="truck-wheel-spin" style={{ transformOrigin: '80px 38px' }}>
+                <line x1="80" y1="32" x2="80" y2="44" stroke="#475569" strokeWidth="1" />
+                <line x1="74" y1="38" x2="86" y2="38" stroke="#475569" strokeWidth="1" />
+              </g>
+              <defs>
+                <linearGradient id="windowShine" x1="65" y1="17" x2="82" y2="23">
+                  <stop offset="0%" stopColor="#fff" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#fff" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+            </svg>
+
+            {/* Exhaust puffs */}
+            <div className="exhaust-puff puff-1"></div>
+            <div className="exhaust-puff puff-2"></div>
+            <div className="exhaust-puff puff-3"></div>
+          </div>
+
+          {/* Dust particles behind truck */}
+          <div className="dust dust-1"></div>
+          <div className="dust dust-2"></div>
+          <div className="dust dust-3"></div>
+        </div>
+
         <h2 className="page-title" style={{ textAlign: "center" }}>
           Welcome back
         </h2>

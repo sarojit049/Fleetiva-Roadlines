@@ -1,0 +1,9 @@
+ENV MONGO_URI was: your-mongo-uri
+Connecting to MongoDB... mongodb://localhost:27017/fleetiva
+Connected.
+Generated Admin Token
+Created Booking: new ObjectId('6992097b67630383434d1937')
+Sending Payload to API...
+❌ FAILED: 401 { message: 'Unauthorized' }
+Testing "bank" payment mode (valid in Mongoose, was invalid in Joi)...
+❌ FAILED "bank" test: 401 { message: 'Unauthorized' }
