@@ -1,6 +1,7 @@
 import { useContext, useEffect, useMemo, useState } from "react";
 import { AppContext } from "../context/appContextStore";
 import api from "../api/axios";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function Profile() {
   const { user } = useContext(AppContext);
@@ -210,11 +211,7 @@ export default function Profile() {
         <section className="profile-section">
           <h2 className="profile-section-title">Drivers you worked with</h2>
           {loadingDrivers ? (
-            <div className="profile-card">
-              <p className="text-muted" style={{ margin: 0 }}>
-                Loading driver information...
-              </p>
-            </div>
+            <LoadingSpinner size="small" message="Loading driver information..." />
           ) : drivers.length === 0 ? (
             <div className="profile-card">
               <p style={{ margin: 0, fontWeight: 600 }}>No drivers yet</p>

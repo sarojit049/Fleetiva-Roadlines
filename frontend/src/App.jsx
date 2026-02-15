@@ -1,6 +1,6 @@
 import React, { useContext, useMemo } from "react";
-
-
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { AppContext } from "./context/AppContext";
 import { safeStorage } from "./utils/storage";
 import { Toaster } from "react-hot-toast";
 
@@ -20,12 +20,13 @@ import Profile from "./pages/Profile";
 import Stats from "./pages/Stats";
 import MyLoads from "./pages/MyLoads";
 import MyTrucks from "./pages/MyTrucks";
+import LoadingSpinner from "./components/LoadingSpinner";
 
 const ProtectedRoute = ({ children, role }) => {
   const { user, loading } = useContext(AppContext);
   const currentRole = user?.role || safeStorage.get("role");
 
-  if (loading) return null;
+  if (loading) return <LoadingSpinner fullScreen={true} message="Authenticating..." />;
   if (!user) return <Navigate to="/login" />;
   if (role && currentRole && currentRole !== role) return <Navigate to="/" />;
 
@@ -36,7 +37,7 @@ const RootRedirect = () => {
   const { user, loading } = useContext(AppContext);
   const role = user?.role || safeStorage.get("role");
 
-  if (loading) return null;
+  if (loading) return <LoadingSpinner fullScreen={true} message="Redirecting..." />;
   if (!user) return <Navigate to="/login" />;
 
   if (role === "superadmin") return <Navigate to="/superadmin" />;

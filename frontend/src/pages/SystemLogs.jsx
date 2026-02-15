@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import api from "../api/axios";
 import { toast } from "react-hot-toast";
 import Skeleton from "../components/Skeleton";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function SystemLogs() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTenant, setSelectedTenant] = useState("all");
+  const [clearing, setClearing] = useState(false);
 
   useEffect(() => {
     api
@@ -25,12 +27,15 @@ export default function SystemLogs() {
       return;
 
     try {
+      setClearing(true);
       await api.delete("/logs");
       setLogs([]);
       toast.success("Logs cleared successfully");
     } catch (error) {
       console.error("Failed to clear logs:", error);
       toast.error("Failed to clear logs");
+    } finally {
+      setClearing(false);
     }
   };
 
@@ -86,6 +91,7 @@ export default function SystemLogs() {
 
   return (
     <div className="page">
+      {clearing && <LoadingSpinner fullScreen={true} message="Clearing logs..." />}
       <div className="page-content">
         <div className="page-header">
           <div>

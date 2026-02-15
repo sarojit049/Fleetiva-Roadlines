@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import api from "../api/axios";
 import { toast } from "react-hot-toast";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function PostLoad() {
   const [consignorName, setConsignorName] = useState("");
@@ -10,6 +11,7 @@ export default function PostLoad() {
   const [capacity, setCapacity] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const postLoad = async () => {
     if (
@@ -27,6 +29,7 @@ export default function PostLoad() {
       toast.error("Capacity must be greater than 0.");
       return;
     }
+    setLoading(true);
     try {
       await api.post("/load/post", {
         consignorName,
@@ -43,17 +46,16 @@ export default function PostLoad() {
       setCapacity("");
       setFrom("");
       setTo("");
-
     } catch (err) {
-
       toast.error(err.response?.data?.message || "Load post failed");
-
-
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="page centered">
+      {loading && <LoadingSpinner fullScreen={true} message="Posting your load..." />}
       <Helmet>
         <title>Post Load - Fleetiva Roadlines</title>
         <meta name="description" content="Post a new load requirement to find matching trucks." />

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import api from "../api/axios";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-hot-toast";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -66,6 +67,7 @@ export default function ForgotPassword() {
 
   return (
     <div className="auth-layout">
+      {loading && <LoadingSpinner fullScreen={true} message="Processing..." />}
       <div className="auth-card">
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           <h2 className="page-title">Reset Password</h2>
@@ -92,7 +94,7 @@ export default function ForgotPassword() {
               onChange={(e) => setEmail(e.target.value)}
             />
             <button type="submit" disabled={loading} className="btn btn-primary">
-              {loading ? <div className="spinner"></div> : "Send Reset OTP"}
+              {loading ? "Sending..." : "Send Reset OTP"}
             </button>
           </form>
         ) : (
@@ -115,7 +117,7 @@ export default function ForgotPassword() {
               onChange={(e) => setNewPassword(e.target.value)}
             />
             <button type="submit" disabled={loading} className="btn btn-primary">
-              {loading ? <div className="spinner"></div> : "Update Password"}
+              {loading ? "Updating..." : "Update Password"}
             </button>
             <button
               type="button"

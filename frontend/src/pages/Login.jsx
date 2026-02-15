@@ -7,6 +7,7 @@ import { toast } from "react-hot-toast";
 import api from "../api/axios";
 import { safeStorage } from "../utils/storage";
 import { auth, googleProvider, hasFirebaseConfig } from "../firebase";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -128,6 +129,7 @@ export default function Login() {
 
   return (
     <div className="auth-layout">
+      {loading && <LoadingSpinner fullScreen={true} message="Signing in..." />}
       <Helmet>
         <title>Login - Fleetiva Roadlines</title>
         <meta
