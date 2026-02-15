@@ -1,28 +1,70 @@
-name: Bug report
-description: Create a report to help us improve
-type: Bug
-labels: bug
+name: 🐞 Bug Report
+description: Report a bug to help improve Fleetiva-Roadlines
+title: "[BUG] "
+labels: ["bug"]
+assignees: []
 body:
   - type: textarea
     attributes:
       label: Describe the bug
-      description: Describe the bug.
-      placeholder: >
-        A clear and concise description of what the bug is.
+      description: A clear and concise description of what the bug is.
+      placeholder: Tell us what went wrong...
     validations:
       required: true
+
   - type: textarea
     attributes:
-      label: To Reproduce
-      placeholder: >
-        Steps to reproduce the behavior:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior.
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll to '...'
+        4. See error
+    validations:
+      required: true
+
   - type: textarea
     attributes:
       label: Expected behavior
-      placeholder: >
-        A clear and concise description of what you expected to happen.
+      description: What you expected to happen.
+      placeholder: Describe what should have happened...
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Actual behavior
+      description: What actually happened instead.
+      placeholder: Describe what happened instead...
+    validations:
+      required: true
+
+  - type: dropdown
+    attributes:
+      label: Environment
+      description: Which environment did this occur in?
+      options:
+        - Production (Vercel)
+        - Local Development
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: Browser & OS
+      description: "e.g. Chrome 120 on Windows 11"
+      placeholder: "Chrome 120, Windows 11"
+
+  - type: textarea
+    attributes:
+      label: Screenshots / Logs
+      description: If applicable, add screenshots or error logs.
+      placeholder: Paste screenshots or logs here...
+
   - type: textarea
     attributes:
       label: Additional context
-      placeholder: >
-        Add any other context about the problem here.
+      description: Any other context about the problem.
+      placeholder: Add any other context here...
