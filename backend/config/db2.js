@@ -13,6 +13,11 @@ let memoryServerInstance = null;
 async function connectMongo() {
   if (mongoose.connection.readyState === 1) return;
 
+  if (process.env.SKIP_MONGO === 'true') {
+    console.log('⚠️ MongoDB skipped (SKIP_MONGO=true)');
+    return;
+  }
+
   try {
     if (!process.env.MONGOMS_VERSION) {
       process.env.MONGOMS_VERSION = '7.0.14';
@@ -36,7 +41,11 @@ async function connectMongo() {
       throw new Error('MONGO_URI is required or install mongodb-memory-server');
     }
 
-    memoryServerInstance = await MongoMemoryServer.create();
+    memoryServerInstance = await MongoMemoryServer.create({
+      instance: {
+        launchTimeout: 30000,
+      },
+    });
     const uri = memoryServerInstance.getUri();
     await mongoose.connect(uri, { autoIndex: true });
   } catch (err) {

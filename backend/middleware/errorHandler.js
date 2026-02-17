@@ -11,10 +11,23 @@ const errorHandler = (err, req, res, next) => {
   if (err.name === 'ValidationError') error.statusCode = 400;
 
   const statusCode = error.statusCode || (res.statusCode === 200 ? 500 : res.statusCode);
-  
+
   console.error(`[Error]: ${err.message}`);
 
   // Log to Database (Async, don't await to keep response fast)
+fix-Real-Time-Shipment-Tracking
+  if (process.env.SKIP_MONGO !== 'true') {
+    Log.create({
+      message: err.message,
+      stack: err.stack,
+      method: req.method,
+      url: req.originalUrl,
+      statusCode,
+      user: req.user?.id,
+      tenant: req.user?.tenantId,
+      ip: req.ip
+    }).catch(logErr => console.error("Failed to save system log:", logErr.message));
+  }
   Log.create({
     message: err.message,
     stack: err.stack,
@@ -25,6 +38,7 @@ const errorHandler = (err, req, res, next) => {
     tenant: req.user?.tenantId,
     ip: req.ip
   }).catch(logErr => console.error("Failed to save system log:", logErr.message));
+ main
 
   if (process.env.NODE_ENV !== 'production') {
     console.error(err.stack);

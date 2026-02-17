@@ -2,6 +2,9 @@ import { useEffect, useState, useContext } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+
+import { useSocket } from "../context/SocketContext";
+
 import { downloadFile } from "../utils/download";
 import toast from "react-hot-toast";
 import DashboardLayout from "../components/DashboardLayout";
@@ -10,11 +13,16 @@ import StatCard from "../components/StatCard";
 import Skeleton from "../components/Skeleton";
 import { AppContext } from "../context/AppContext";
 
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useContext(AppContext);
   const [bookings, setBookings] = useState([]);
+
+  const socket = useSocket();
+
   const [loading, setLoading] = useState(true);
+
 
   useEffect(() => {
     api
@@ -23,6 +31,23 @@ export default function Dashboard() {
       .catch((error) => console.error("Fetch error:", error))
       .finally(() => setLoading(false));
   }, []);
+
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleBookingUpdate = (updatedBooking) => {
+      setBookings((prev) =>
+        prev.map((b) => (b._id === updatedBooking._id ? updatedBooking : b))
+      );
+    };
+
+    socket.on("bookingUpdated", handleBookingUpdate);
+
+    return () => {
+      socket.off("bookingUpdated", handleBookingUpdate);
+    };
+  }, [socket]);
 
   const downloadBilty = async (id) => {
     try {
@@ -45,6 +70,7 @@ export default function Dashboard() {
   const active = bookings.filter((b) => b.status !== "delivered").length;
   const delivered = bookings.filter((b) => b.status === "delivered").length;
   const inTransit = bookings.filter((b) => b.status === "in-transit").length;
+
 
   return (
     <DashboardLayout>

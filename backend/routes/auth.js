@@ -43,8 +43,9 @@ const validatePassword = (password) => typeof password === 'string' && password.
 
 const firebaseReady = () => admin.apps && admin.apps.length > 0;
 
-const logLoginAttempt = ({ req, user, email, provider, status, reason }) =>
-  LoginLog.create({
+const logLoginAttempt = ({ req, user, email, provider, status, reason }) => {
+  if (process.env.SKIP_MONGO === 'true') return Promise.resolve();
+  return LoginLog.create({
     user: user?._id,
     email: email || user?.email,
     provider,
@@ -54,6 +55,15 @@ const logLoginAttempt = ({ req, user, email, provider, status, reason }) =>
     userAgent: req.get('user-agent'),
   }).catch(() => { });
 
+};
+
+router.post('/register', async (req, res) => {
+  const { name, email, phone, password, role = 'customer', companyName } = req.body;
+
+  if (!name || !email || !phone || !password) {
+    return res.status(400).json({ message: 'Name, email, phone, and password are required.' });
+
+
 router.post('/register', asyncHandler(async (req, res) => {
   const { error, value } = registerSchema.validate(req.body, { abortEarly: false });
   if (error) {
@@ -61,6 +71,7 @@ router.post('/register', asyncHandler(async (req, res) => {
       message: 'Validation failed',
       errors: error.details.map(detail => ({ field: detail.path.join('.'), message: detail.message }))
     });
+
   }
 
   const { name, email, phone, password, role, companyName } = value;

@@ -9,8 +9,12 @@ const DriverAssignment = require('../models/DriverAssignment');
 const User = require('../models/User');
 const { authenticate, authorize } = require('../middleware/combinedAuth');
 const { generateBiltyPDF, generateInvoicePDF } = require('../utils/pdfGenerator');
+
+const { getIo } = require('../utils/socketHandler');
+
 const { createBookingSchema, updateStatusSchema, updatePaymentSchema } = require('../validations/bookingValidation');
 const asyncHandler = require('../utils/asyncHandler');
+
 
 const router = express.Router();
 
@@ -190,6 +194,14 @@ router.patch('/:id/status', authenticate, authorize('driver'), asyncHandler(asyn
 
   if (status === 'delivered') {
     await Load.findByIdAndUpdate(booking.load, { status: 'delivered' });
+  }
+
+  // Emit real-time update
+  try {
+    const io = getIo();
+    io.emit('bookingUpdated', booking);
+  } catch (err) {
+    console.error('Socket emit failed:', err.message);
   }
 
   res.json(booking);
