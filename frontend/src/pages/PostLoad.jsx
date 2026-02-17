@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import api from "../api/axios";
+import { toast } from "react-hot-toast";
 
 export default function PostLoad() {
   const [consignorName, setConsignorName] = useState("");
@@ -11,6 +12,21 @@ export default function PostLoad() {
   const [to, setTo] = useState("");
 
   const postLoad = async () => {
+    if (
+      !consignorName ||
+      !consigneeName ||
+      !material ||
+      !capacity ||
+      !from ||
+      !to
+    ) {
+      toast.error("Please fill in all required fields.");
+      return;
+    }
+    if (Number(capacity) <= 0) {
+      toast.error("Capacity must be greater than 0.");
+      return;
+    }
     try {
       await api.post("/load/post", {
         consignorName,
@@ -20,16 +36,19 @@ export default function PostLoad() {
         from,
         to,
       });
-      alert("Load Posted Successfully");
+      toast.success("Load Posted Successfully");
       setConsignorName("");
       setConsigneeName("");
       setMaterial("");
       setCapacity("");
       setFrom("");
       setTo("");
-    } catch (error) {
-      console.error("Failed to post load:", error);
-      alert("Failed to post load. Please check your inputs.");
+
+    } catch (err) {
+
+      toast.error(err.response?.data?.message || "Load post failed");
+
+
     }
   };
 

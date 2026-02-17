@@ -15,6 +15,7 @@ const errorHandler = (err, req, res, next) => {
   console.error(`[Error]: ${err.message}`);
 
   // Log to Database (Async, don't await to keep response fast)
+fix-Real-Time-Shipment-Tracking
   if (process.env.SKIP_MONGO !== 'true') {
     Log.create({
       message: err.message,
@@ -27,6 +28,17 @@ const errorHandler = (err, req, res, next) => {
       ip: req.ip
     }).catch(logErr => console.error("Failed to save system log:", logErr.message));
   }
+  Log.create({
+    message: err.message,
+    stack: err.stack,
+    method: req.method,
+    url: req.originalUrl,
+    statusCode,
+    user: req.user?.userId,
+    tenant: req.user?.tenantId,
+    ip: req.ip
+  }).catch(logErr => console.error("Failed to save system log:", logErr.message));
+ main
 
   if (process.env.NODE_ENV !== 'production') {
     console.error(err.stack);

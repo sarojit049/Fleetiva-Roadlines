@@ -1,0 +1,27 @@
+
+> frontend@0.0.0 build
+> vite build
+
+vite v7.3.1 building client environment for production...
+transforming...
+✓ 132 modules transformed.
+✗ Build failed in 3.66s
+error during build:
+src/pages/Profile.jsx (2:9): "AppContext" is not exported by "src/context/AppContext.jsx", imported by "src/pages/Profile.jsx".
+file: /home/karthik/Documents/Projects/hobbie project/Fleetiva-Roadlines/frontend/src/pages/Profile.jsx:2:9
+
+1: import { useContext, useEffect, useMemo, useState } from "react";
+2: import { AppContext } from "../context/AppContext";
+            ^
+3: import api from "../api/axios";
+
+    at getRollupError (file:///home/karthik/Documents/Projects/hobbie%20project/Fleetiva-Roadlines/frontend/node_modules/rollup/dist/es/shared/parseAst.js:400:41)
+    at error (file:///home/karthik/Documents/Projects/hobbie%20project/Fleetiva-Roadlines/frontend/node_modules/rollup/dist/es/shared/parseAst.js:396:42)
+    at Module.error (file:///home/karthik/Documents/Projects/hobbie%20project/Fleetiva-Roadlines/frontend/node_modules/rollup/dist/es/shared/node-entry.js:17036:16)
+    at Module.traceVariable (file:///home/karthik/Documents/Projects/hobbie%20project/Fleetiva-Roadlines/frontend/node_modules/rollup/dist/es/shared/node-entry.js:17448:29)
+    at ModuleScope.findVariable (file:///home/karthik/Documents/Projects/hobbie%20project/Fleetiva-Roadlines/frontend/node_modules/rollup/dist/es/shared/node-entry.js:15066:39)
+    at FunctionScope.findVariable (file:///home/karthik/Documents/Projects/hobbie%20project/Fleetiva-Roadlines/frontend/node_modules/rollup/dist/es/shared/node-entry.js:5673:38)
+    at FunctionBodyScope.findVariable (file:///home/karthik/Documents/Projects/hobbie%20project/Fleetiva-Roadlines/frontend/node_modules/rollup/dist/es/shared/node-entry.js:5673:38)
+    at Identifier.bind (file:///home/karthik/Documents/Projects/hobbie%20project/Fleetiva-Roadlines/frontend/node_modules/rollup/dist/es/shared/node-entry.js:5447:40)
+    at CallExpression.bind (file:///home/karthik/Documents/Projects/hobbie%20project/Fleetiva-Roadlines/frontend/node_modules/rollup/dist/es/shared/node-entry.js:2825:28)
+    at CallExpression.bind (file:///home/karthik/Documents/Projects/hobbie%20project/Fleetiva-Roadlines/frontend/node_modules/rollup/dist/es/shared/node-entry.js:12179:15)
