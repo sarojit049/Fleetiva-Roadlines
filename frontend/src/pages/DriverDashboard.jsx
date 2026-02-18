@@ -1,11 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { Helmet } from "react-helmet-async";
 import api from "../api/axios";
 import { toast } from "react-hot-toast";
 import { downloadFile } from "../utils/download";
+import DashboardLayout from "../components/DashboardLayout";
+import WelcomeHeader from "../components/WelcomeHeader";
+import StatCard from "../components/StatCard";
 import Skeleton from "../components/Skeleton";
+import { AppContext } from "../context/AppContext";
 
 export default function DriverDashboard() {
+  const { user } = useContext(AppContext);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -52,86 +57,96 @@ export default function DriverDashboard() {
     }
   };
 
+  const active = bookings.filter((b) => b.status === "assigned").length;
+  const inTransit = bookings.filter((b) => b.status === "in-transit").length;
+  const delivered = bookings.filter((b) => b.status === "delivered").length;
+
   return (
-    <div className="page">
+    <DashboardLayout>
       <Helmet>
         <title>Driver Dashboard - Fleetiva Roadlines</title>
         <meta name="description" content="View assigned trips and update delivery status." />
       </Helmet>
-      <div className="page-content">
-        <div className="page-header">
-          <div>
-            <h2 className="page-title">Driver Dashboard</h2>
-            <p className="page-subtitle">
-              Manage assigned trips and update delivery statuses quickly.
-            </p>
-          </div>
+
+      <WelcomeHeader
+        name={user?.name}
+        subtitle="Manage your trips and update delivery statuses."
+      />
+
+      {/* Stats */}
+      <div className="stat-grid">
+        <StatCard icon="📋" label="Assigned" value={active} accent="#f59e0b" />
+        <StatCard icon="🚚" label="In Transit" value={inTransit} accent="#3b82f6" />
+        <StatCard icon="✅" label="Delivered" value={delivered} accent="#22c55e" />
+        <StatCard icon="📊" label="Total Trips" value={bookings.length} accent="#6366f1" />
+      </div>
+
+      {/* Trip List */}
+      <div className="dash-section" style={{ marginTop: 20 }}>
+        <div className="dash-section-header">
+          <h3 className="dash-section-title">Your Trips</h3>
         </div>
-        <section className="stack">
-          {loading ? (
-            [1, 2, 3].map((n) => (
-              <div key={n} className="card">
-                <Skeleton width="50%" height="24px" />
-                <div style={{ marginTop: "12px" }}>
-                  <Skeleton width="30%" height="16px" />
-                </div>
-                <div className="toolbar" style={{ marginTop: "16px" }}>
-                  <Skeleton width="100px" height="36px" borderRadius="10px" />
-                  <Skeleton width="100px" height="36px" borderRadius="10px" />
+
+        {loading ? (
+          <div className="dash-card-list">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="dash-booking-card">
+                <Skeleton width="50%" height="22px" />
+                <div className="toolbar">
+                  <Skeleton width="100px" height="34px" borderRadius="10px" />
                 </div>
               </div>
-            ))
-          ) : bookings.length > 0 ? (
-            bookings.map((b) => (
-              <div key={b._id} className="card">
-                <p style={{ margin: 0, fontWeight: 600 }}>
-                  {b.from} → {b.to}
-                </p>
-                <p className="text-muted" style={{ margin: "6px 0 12px" }}>
-                  Status: {b.status}
-                </p>
-                <div className="toolbar">
+            ))}
+          </div>
+        ) : bookings.length > 0 ? (
+          <div className="dash-card-list">
+            {bookings.map((b) => (
+              <div key={b._id} className="dash-booking-card">
+                <div>
+                  <div className="dash-booking-route">
+                    <span>{b.from}</span>
+                    <span className="dash-route-arrow">→</span>
+                    <span>{b.to}</span>
+                  </div>
+                  <span className="dash-booking-info">
+                    Status: {b.status} • {new Date(b.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+                <div className="dash-booking-meta">
+                  <span className={`tag ${b.status === "delivered" ? "success"
+                      : b.status === "in-transit" ? "info"
+                        : "warning"
+                    }`}>
+                    {b.status}
+                  </span>
                   {b.status === "assigned" && (
-                    <button
-                      className="btn btn-primary"
-                      onClick={() => updateStatus(b._id, "in-transit")}
-                    >
+                    <button className="btn btn-primary btn-sm" onClick={() => updateStatus(b._id, "in-transit")}>
                       Start Trip
                     </button>
                   )}
                   {b.status === "in-transit" && (
-                    <button
-                      className="btn btn-success"
-                      onClick={() => updateStatus(b._id, "delivered")}
-                    >
+                    <button className="btn btn-success btn-sm" onClick={() => updateStatus(b._id, "delivered")}>
                       Mark Delivered
                     </button>
                   )}
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => downloadBilty(b._id)}
-                  >
-                    Bilty PDF
+                  <button className="btn btn-secondary btn-sm" onClick={() => downloadBilty(b._id)}>
+                    Bilty
                   </button>
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => downloadInvoice(b._id)}
-                  >
-                    Invoice PDF
+                  <button className="btn btn-secondary btn-sm" onClick={() => downloadInvoice(b._id)}>
+                    Invoice
                   </button>
                 </div>
               </div>
-            ))
-          ) : (
-            <div className="card">
-              <p style={{ margin: 0, fontWeight: 600 }}>No active bookings found.</p>
-              <p className="text-muted" style={{ margin: "6px 0 0" }}>
-                Check back soon for new assignments.
-              </p>
-            </div>
-          )}
-        </section>
+            ))}
+          </div>
+        ) : (
+          <div className="dash-empty">
+            <span className="dash-empty-icon">🚛</span>
+            <p className="dash-empty-title">No active trips</p>
+            <p className="dash-empty-desc">Check back soon for new assignments.</p>
+          </div>
+        )}
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

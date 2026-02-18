@@ -24,7 +24,7 @@ export const getApiBaseUrl = () => {
   // Note: VITE_API_BASE_URL needs to be set in Vercel for production to override this if needed, 
   // or to be explicit.
   if (import.meta.env.PROD) {
-    return "https://fleetiva-backend.onrender.com/api";
+    return "https://fleetiva-roadlines.onrender.com/api";
   }
 
   throw new Error(

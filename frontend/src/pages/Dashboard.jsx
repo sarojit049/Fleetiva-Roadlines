@@ -1,23 +1,26 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import { downloadFile } from "../utils/download";
 import toast from "react-hot-toast";
+import DashboardLayout from "../components/DashboardLayout";
+import WelcomeHeader from "../components/WelcomeHeader";
+import StatCard from "../components/StatCard";
 import Skeleton from "../components/Skeleton";
+import { AppContext } from "../context/AppContext";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { user } = useContext(AppContext);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     api
-
       .get("/booking/customer/bookings")
       .then((res) => setBookings(res.data))
       .catch((error) => console.error("Fetch error:", error))
-
       .finally(() => setLoading(false));
   }, []);
 
@@ -39,98 +42,91 @@ export default function Dashboard() {
     }
   };
 
+  const active = bookings.filter((b) => b.status !== "delivered").length;
+  const delivered = bookings.filter((b) => b.status === "delivered").length;
+  const inTransit = bookings.filter((b) => b.status === "in-transit").length;
+
   return (
-    <div className="page dashboard-page">
-      <div className="page-content">
-        <div className="page-header dashboard-header">
-          <div className="dashboard-header-text">
-            <h2 className="page-title">Customer Dashboard</h2>
-            <p className="page-subtitle">
-              Track your active shipments and post new loads in seconds.
-            </p>
-          </div>
-          <button
-            className="btn btn-primary dashboard-cta"
-            onClick={() => navigate("/post-load")}
-          >
-            Post New Load
-          </button>
+    <DashboardLayout>
+      <Helmet>
+        <title>Dashboard - Fleetiva Roadlines</title>
+        <meta name="description" content="Track your active shipments and post new loads." />
+      </Helmet>
+
+      <WelcomeHeader
+        name={user?.name}
+        subtitle="Track your shipments and manage your loads from here."
+      >
+        <button className="btn btn-primary" onClick={() => navigate("/post-load")}>
+          + Post New Load
+        </button>
+      </WelcomeHeader>
+
+      {/* Stats */}
+      <div className="stat-grid">
+        <StatCard icon="📦" label="Total Bookings" value={bookings.length} accent="#6366f1" />
+        <StatCard icon="🚚" label="In Transit" value={inTransit} accent="#3b82f6" />
+        <StatCard icon="✅" label="Delivered" value={delivered} accent="#22c55e" />
+        <StatCard icon="⏳" label="Active" value={active} accent="#f59e0b" />
+      </div>
+
+      {/* Bookings Section */}
+      <div className="dash-section" style={{ marginTop: 20 }}>
+        <div className="dash-section-header">
+          <h3 className="dash-section-title">Your Bookings</h3>
         </div>
 
-        <section className="stack dashboard-section">
-          <h3 className="section-title">Your Bookings</h3>
-          {loading ? (
-            <div className="dashboard-booking-list">
-              {[1, 2, 3].map((n) => (
-                <div key={n} className="dashboard-card" style={{ padding: "20px" }}>
-                  <Skeleton width="60%" height="24px" />
-                  <div style={{ marginTop: "8px" }}>
-                    <Skeleton width="40%" height="16px" />
+        {loading ? (
+          <div className="dash-card-list">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="dash-booking-card">
+                <Skeleton width="60%" height="22px" />
+                <Skeleton width="80px" height="28px" borderRadius="999px" />
+              </div>
+            ))}
+          </div>
+        ) : bookings.length === 0 ? (
+          <div className="dash-empty">
+            <span className="dash-empty-icon">📦</span>
+            <p className="dash-empty-title">No bookings yet</p>
+            <p className="dash-empty-desc">Post your first load to start receiving matches.</p>
+            <button className="btn btn-primary" onClick={() => navigate("/post-load")}>
+              Post a Load
+            </button>
+          </div>
+        ) : (
+          <div className="dash-card-list">
+            {bookings.map((b) => (
+              <div key={b._id} className="dash-booking-card">
+                <div>
+                  <div className="dash-booking-route">
+                    <span>{b.from}</span>
+                    <span className="dash-route-arrow">→</span>
+                    <span>{b.to}</span>
                   </div>
+                  <span className="dash-booking-info">
+                    {b.load?.material || "Load"} • {new Date(b.createdAt).toLocaleDateString()}
+                  </span>
                 </div>
-              ))}
-            </div>
-          ) : bookings.length === 0 ? (
-            <div className="dashboard-card dashboard-card-empty">
-              <span className="dashboard-empty-icon" aria-hidden="true">
-                📦
-              </span>
-              <p className="dashboard-empty-title">No bookings yet</p>
-              <p className="dashboard-empty-desc">
-                Post your first load to start receiving matches.
-              </p>
-              <button
-                className="btn btn-primary"
-                onClick={() => navigate("/post-load")}
-              >
-                Post a load
-              </button>
-            </div>
-          ) : (
-            <div className="dashboard-booking-list">
-              {bookings.map((b) => (
-                <div
-                  key={b._id}
-                  className="dashboard-card dashboard-booking-card"
-                >
-                  <div className="dashboard-booking-main">
-                    <p className="dashboard-booking-title">
-                      {b.load?.material || "Load"}
-                    </p>
-                    <p className="dashboard-booking-route text-muted">
-                      {b.from} → {b.to}
-                    </p>
-                  </div>
-                  <span
-                    className={`tag ${b.status === "delivered"
-                      ? "success"
-                      : b.status === "in-transit"
-                        ? "info"
-                        : "warning"
-                      }`}
-                  >
+                <div className="dash-booking-meta">
+                  <span className={`tag ${b.status === "delivered" ? "success"
+                    : b.status === "in-transit" ? "info"
+                      : "warning"
+                    }`}>
                     {b.status}
                   </span>
-                  <div className="toolbar" style={{ marginTop: 16 }}>
-                    <button
-                      className="btn btn-secondary"
-                      onClick={() => downloadBilty(b._id)}
-                    >
-                      Download Bilty
-                    </button>
-                    <button
-                      className="btn btn-secondary"
-                      onClick={() => downloadInvoice(b._id)}
-                    >
-                      Download Invoice
-                    </button>
-                  </div>
+                  <button className="btn btn-secondary btn-sm" onClick={() => downloadBilty(b._id)}>
+                    Bilty
+                  </button>
+                  <button className="btn btn-secondary btn-sm" onClick={() => downloadInvoice(b._id)}>
+                    Invoice
+                  </button>
                 </div>
-              ))}
-            </div>
-          )}
-        </section>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

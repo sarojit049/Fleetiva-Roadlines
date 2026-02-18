@@ -22,12 +22,22 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const config = error.config;
+    const status = error.response?.status;
+
+    if (status === 401) {
+      safeStorage.remove("accessToken");
+      if (typeof window !== "undefined") {
+        window.location.assign("/login");
+      }
+      return Promise.reject(error);
+    }
+
     if (!config) {
       return Promise.reject(error);
     }
 
     const shouldRetry =
-      (!error.response || error.response.status >= 500) &&
+      (!error.response || status >= 500) &&
       (config.method === "get" || config.method === "head");
 
     if (shouldRetry && config.metadata.retryCount < 2) {

@@ -5,6 +5,7 @@ import { safeStorage } from "./utils/storage";
 import { Toaster } from "react-hot-toast";
 
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -46,22 +47,34 @@ const RootRedirect = () => {
   return <Navigate to="/dashboard" />;
 };
 
-const App = () => {
-  const { user } = useContext(AppContext);
+// Dashboard routes use DashboardLayout with sidebar, so no Navbar needed
+const DASHBOARD_PATHS = ["/admin", "/dashboard", "/driver", "/superadmin"];
 
-  const showNavbar = useMemo(() => Boolean(user), [user]);
+const AppContent = () => {
+  const { user } = useContext(AppContext);
+  const location = useLocation();
+
+  const isDashboardRoute = DASHBOARD_PATHS.some(
+    (p) => location.pathname === p || location.pathname.startsWith(p + "/")
+  );
+
+  // Show Navbar only for logged-in users on NON-dashboard routes
+  const showNavbar = useMemo(
+    () => Boolean(user) && !isDashboardRoute,
+    [user, isDashboardRoute]
+  );
+
+  // Show Footer on non-dashboard pages (except landing, which has its own)
+  const showFooter = !isDashboardRoute && location.pathname !== "/";
 
   return (
-    <Router>
+    <>
       {showNavbar && <Navbar />}
 
       <Routes>
         <Route path="/" element={user ? <RootRedirect /> : <LandingPage />} />
         <Route path="/login" element={user ? <RootRedirect /> : <Login />} />
-        <Route
-          path="/register"
-          element={user ? <RootRedirect /> : <Register />}
-        />
+        <Route path="/register" element={user ? <RootRedirect /> : <Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
         <Route
@@ -157,7 +170,17 @@ const App = () => {
           }
         />
       </Routes>
+
+      {showFooter && <Footer />}
       <Toaster position="top-right" />
+    </>
+  );
+};
+
+const App = () => {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 };
