@@ -1,5 +1,5 @@
 import React, { useContext, useMemo } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AppContext } from "./context/AppContext";
 import { safeStorage } from "./utils/storage";
 import { Toaster } from "react-hot-toast";
