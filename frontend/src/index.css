@@ -2690,7 +2690,7 @@ textarea:focus {
 
 .notfound-orb {
   position: absolute;
-  border-radius: 999px;
+  border-radius: 50%;
   filter: blur(50px);
   animation: notfound-pulse 5s ease-in-out infinite;
 }
@@ -2804,7 +2804,6 @@ textarea:focus {
 
 .notfound-btn:hover {
   transform: translateY(-3px) scale(1.02);
-  min-width: 170px;
 }
 
 
