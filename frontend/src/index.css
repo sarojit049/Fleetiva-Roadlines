@@ -2692,7 +2692,7 @@ textarea:focus {
   position: absolute;
   border-radius: 85px;
   filter: blur(50px);
-  animation: notfoundPulse 5s ease-in-out infinite;
+  animation: notfound-pulse 5s ease-in-out infinite;
 }
 
 .notfound-orb.orb-left {
@@ -2738,7 +2738,7 @@ textarea:focus {
   height: 96px;
   position: relative;
   z-index: 1;
-  animation: notfoundFloat 4s ease-in-out infinite;
+  animation: notfound-float 4s ease-in-out infinite;
 }
 
 .notfound-shadow {
@@ -2808,7 +2808,7 @@ textarea:focus {
 }
 
 
-@keyframes notfoundFloat {
+@keyframes notfound-float {
   0%,
   100% {
     transform: translateY(0) rotate(0deg);
@@ -2823,7 +2823,7 @@ textarea:focus {
   }
 }
 
-@keyframes notfoundPulse {
+@keyframes notfound-pulse {
   0%,
   100% {
     transform: scale(1);

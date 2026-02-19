@@ -57,8 +57,18 @@ const RootRedirect = () => {
 
 // Dashboard routes use DashboardLayout with sidebar, so no Navbar needed
 const DASHBOARD_PATHS = ["/admin", "/dashboard", "/driver", "/superadmin"];
-const NON_DASHBOARD_PATHS = ["/", "/login", "/register", "/forgot-password"];
-
+const NON_DASHBOARD_PATHS = [
+  "/",
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/post-load",
+  "/post-truck",
+  "/profile",
+  "/stats",
+  "/my-loads",
+  "/my-trucks"
+];
 const AppContent = () => {
   const { user } = useContext(AppContext);
   const location = useLocation();
