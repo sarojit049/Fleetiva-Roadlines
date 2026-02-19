@@ -56,7 +56,7 @@ export default function NotFound() {
             <div className="notfound-shadow" />
           </div>
 
-          <p className="notfound-badge">Error 404</p>
+          <p className="notfound-badge">Error</p>
           <h1 className="notfound-code">404</h1>
           <h2 className="notfound-title">Page Not Found</h2>
           <p className="notfound-text">

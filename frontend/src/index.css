@@ -85,7 +85,7 @@ textarea {
 .pill {
   align-self: flex-start;
   padding: 6px 12px;
-  border-radius: 999px;
+  border-radius: 85px;
   background: #e0e7ff;
   color: #4338ca;
   font-size: 12px;
@@ -182,7 +182,7 @@ textarea {
   display: inline-flex;
   align-items: center;
   padding: 4px 10px;
-  border-radius: 999px;
+  border-radius: 85px;
   font-size: 12px;
   font-weight: 600;
   text-transform: capitalize;
@@ -624,7 +624,7 @@ textarea:focus {
 
 .chip {
   padding: 6px 10px;
-  border-radius: 999px;
+  border-radius: 85px;
   background: #f1f5f9;
   color: #334155;
   font-size: 12px;
@@ -837,7 +837,7 @@ textarea:focus {
 .profile-role-badge {
   display: inline-block;
   padding: 6px 12px;
-  border-radius: 999px;
+  border-radius: 85px;
   font-size: 12px;
   font-weight: 600;
   text-transform: capitalize;
@@ -1510,7 +1510,7 @@ textarea:focus {
 
 .stats-contract-badge {
   padding: 4px 10px;
-  border-radius: 999px;
+  border-radius: 85px;
   font-size: 12px;
   font-weight: 600;
 }
@@ -1768,7 +1768,7 @@ textarea:focus {
 
 .myloads-status {
   padding: 4px 12px;
-  border-radius: 999px;
+  border-radius: 85px;
   font-size: 12px;
   font-weight: 600;
   text-transform: capitalize;
@@ -2690,7 +2690,7 @@ textarea:focus {
 
 .notfound-orb {
   position: absolute;
-  border-radius: 999px;
+  border-radius: 85px;
   filter: blur(50px);
   animation: notfoundPulse 5s ease-in-out infinite;
 }
@@ -2744,7 +2744,7 @@ textarea:focus {
 .notfound-shadow {
   width: 90px;
   height: 16px;
-  border-radius: 999px;
+  border-radius: 85px;
   background: rgba(2, 6, 23, 0.45);
   filter: blur(8px);
   margin: -4px auto 0;
@@ -2753,13 +2753,13 @@ textarea:focus {
 .notfound-badge {
   display: inline-block;
   margin: 0;
-  padding: 6px 12px;
-  border-radius: 999px;
+  padding: 8px 12px 6px;
+  border-radius: 85px;
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 3px;
   text-transform: uppercase;
-  color: #f8fafc;
+  color: #db544d;
   background: rgba(148, 163, 184, 0.2);
 }
 
@@ -2801,6 +2801,12 @@ textarea:focus {
 .notfound-btn {
   min-width: 170px;
 }
+
+.notfound-btn:hover {
+  transform: translateY(-3px) scale(1.02);
+  min-width: 170px;
+}
+
 
 @keyframes notfoundFloat {
   0%,
@@ -3557,7 +3563,7 @@ textarea:focus {
   display: inline-flex;
   align-items: center;
   padding: 4px 10px;
-  border-radius: 999px;
+  border-radius: 85px;
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
