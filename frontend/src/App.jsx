@@ -20,6 +20,8 @@ import Profile from "./pages/Profile";
 import Stats from "./pages/Stats";
 import MyLoads from "./pages/MyLoads";
 import MyTrucks from "./pages/MyTrucks";
+import BackToTop from "./components/BackToTop";
+
 import {
   BrowserRouter as Router,
   Routes,
@@ -77,6 +79,8 @@ const AppContent = () => {
   return (
     <>
       {showNavbar && <Navbar />}
+
+      <BackToTop />
 
       <Routes>
         <Route path="/" element={user ? <RootRedirect /> : <LandingPage />} />
