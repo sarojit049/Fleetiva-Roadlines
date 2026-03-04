@@ -6,9 +6,7 @@ const postLoadSchema = Joi.object({
   from: Joi.string().trim().min(2).max(200).required(),
   to: Joi.string().trim().min(2).max(200).required(),
   consignorName: Joi.string().trim().min(2).max(200).required(),
-  consigneeName: Joi.string().trim().min(2).max(200).required()
+  consigneeName: Joi.string().trim().min(2).max(200).required(),
 });
 
-module.exports = {
-  postLoadSchema
-};
+module.exports = { postLoadSchema };

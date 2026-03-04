@@ -10,47 +10,45 @@ export default function PostLoad() {
   const [capacity, setCapacity] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+ const postLoad = async () => {
+  // Empty field check
+  if (!consignorName || !consigneeName || !material || !capacity || !from || !to) {
+    toast.error("Please fill in all required fields.");
+    return;
+  }
 
-  const postLoad = async () => {
-    if (
-      !consignorName ||
-      !consigneeName ||
-      !material ||
-      !capacity ||
-      !from ||
-      !to
-    ) {
-      toast.error("Please fill in all required fields.");
-      return;
-    }
-    if (Number(capacity) <= 0) {
-      toast.error("Capacity must be greater than 0.");
-      return;
-    }
-    try {
-      await api.post("/load/post", {
-        consignorName,
-        consigneeName,
-        material,
-        requiredCapacity: Number(capacity),
-        from,
-        to,
-      });
-      toast.success("Load Posted Successfully");
-      setConsignorName("");
-      setConsigneeName("");
-      setMaterial("");
-      setCapacity("");
-      setFrom("");
-      setTo("");
+  // Capacity must be positive
+  if (Number(capacity) <= 0) {
+    toast.error("Capacity must be greater than 0.");
+    return;
+  }
 
-    } catch (err) {
+  // Origin and destination can't be the same
+  if (from.trim().toLowerCase() === to.trim().toLowerCase()) {
+    toast.error("Origin and destination cities cannot be the same.");
+    return;
+  }
 
-      toast.error(err.response?.data?.message || "Load post failed");
-
-
-    }
-  };
+  try {
+    await api.post("/load/post", {
+      consignorName,
+      consigneeName,
+      material,
+      requiredCapacity: Number(capacity),
+      from,
+      to,
+    });
+    toast.success("Load Posted Successfully");
+    setConsignorName("");
+    setConsigneeName("");
+    setMaterial("");
+    setCapacity("");
+    setFrom("");
+    setTo("");
+  } catch (err) {
+    toast.error(err.response?.data?.message || "Load post failed");
+  }
+};
 
   return (
     <div className="page centered">

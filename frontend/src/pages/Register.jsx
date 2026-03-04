@@ -64,7 +64,7 @@ export default function Register() {
       return "Please enter a valid email address.";
     }
 
-    const phoneRegex = /^[0-9]{10}$/;
+    const phoneRegex = /^[0-9]{10,12}$/;
     if (!phoneRegex.test(phone)) {
       return "Please enter a valid 10-digit phone number.";
     }
