@@ -12,13 +12,13 @@ export default function PostLoad() {
   const [to, setTo] = useState("");
  const postLoad = async () => {
   // Empty field check
-  if (!consignorName || !consigneeName || !material || !capacity || !from || !to) {
+  if (!consignorName.trim() || !consigneeName.trim() || !material.trim() || !capacity || !from.trim() || !to.trim()) {
     toast.error("Please fill in all required fields.");
     return;
   }
 
   // Capacity must be positive
-  if (Number(capacity) <= 0) {
+  if (!capacity || isNaN(Number(capacity)) || Number(capacity) <= 0) {
     toast.error("Capacity must be greater than 0.");
     return;
   }
@@ -46,7 +46,12 @@ export default function PostLoad() {
     setFrom("");
     setTo("");
   } catch (err) {
-    toast.error(err.response?.data?.message || "Load post failed");
+    const backendErrors = err.response?.data?.errors;
+if (backendErrors && backendErrors.length > 0) {
+  toast.error(backendErrors[0].message);
+} else {
+  toast.error(err.response?.data?.message || "Load post failed");
+}
   }
 };
 
