@@ -10,50 +10,48 @@ export default function PostLoad() {
   const [capacity, setCapacity] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
- const postLoad = async () => {
-  // Empty field check
-  if (!consignorName.trim() || !consigneeName.trim() || !material.trim() || !capacity || !from.trim() || !to.trim()) {
-    toast.error("Please fill in all required fields.");
-    return;
-  }
 
-  // Capacity must be positive
-  if (!capacity || isNaN(Number(capacity)) || Number(capacity) <= 0) {
-    toast.error("Capacity must be greater than 0.");
-    return;
-  }
+  const postLoad = async () => {
+    if (!consignorName.trim() || !consigneeName.trim() || !material.trim() || !capacity || !from.trim() || !to.trim()) {
+      toast.error("Please fill in all required fields.");
+      return;
+    }
 
-  // Origin and destination can't be the same
-  if (from.trim().toLowerCase() === to.trim().toLowerCase()) {
-    toast.error("Origin and destination cities cannot be the same.");
-    return;
-  }
+    if (!capacity || isNaN(Number(capacity)) || Number(capacity) <= 0) {
+      toast.error("Capacity must be greater than 0.");
+      return;
+    }
 
-  try {
-    await api.post("/load/post", {
-      consignorName,
-      consigneeName,
-      material,
-      requiredCapacity: Number(capacity),
-      from,
-      to,
-    });
-    toast.success("Load Posted Successfully");
-    setConsignorName("");
-    setConsigneeName("");
-    setMaterial("");
-    setCapacity("");
-    setFrom("");
-    setTo("");
-  } catch (err) {
-    const backendErrors = err.response?.data?.errors;
-if (backendErrors && backendErrors.length > 0) {
-  toast.error(backendErrors[0].message);
-} else {
-  toast.error(err.response?.data?.message || "Load post failed");
-}
-  }
-};
+    if (from.trim().toLowerCase() === to.trim().toLowerCase()) {
+      toast.error("Origin and destination cities cannot be the same.");
+      return;
+    }
+
+    try {
+      await api.post("/load/post", {
+        consignorName,
+        consigneeName,
+        material,
+        requiredCapacity: Number(capacity),
+        from,
+        to,
+      });
+      toast.success("Load Posted Successfully");
+      setConsignorName("");
+      setConsigneeName("");
+      setMaterial("");
+      setCapacity("");
+      setFrom("");
+      setTo("");
+    } catch (err) {
+      const backendErrors = err.response?.data?.errors;
+      if (backendErrors && backendErrors.length > 0) {
+        toast.error(backendErrors[0].message);
+      } else {
+        toast.error(err.response?.data?.message || "Load post failed");
+      }
+    }
+  };
 
   return (
     <div className="page centered">
