@@ -15,8 +15,21 @@ const updatePaymentSchema = Joi.object({
   status: Joi.string().valid('paid', 'pending').required()
 });
 
+const bookingIdParamSchema = Joi.object({
+  id: Joi.string().hex().length(24).required()
+});
+
+const bookingListQuerySchema = Joi.object({
+  page: Joi.number().integer().min(1).optional(),
+  limit: Joi.number().integer().min(1).max(100).optional(),
+  sortBy: Joi.string().valid('createdAt').optional(),
+  sortOrder: Joi.string().valid('asc', 'desc').optional()
+});
+
 module.exports = {
   createBookingSchema,
   updateStatusSchema,
-  updatePaymentSchema
+  updatePaymentSchema,
+  bookingIdParamSchema,
+  bookingListQuerySchema
 };
