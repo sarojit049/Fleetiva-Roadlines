@@ -8,6 +8,26 @@
 
 ---
 
+## 📑 Table of Contents
+
+- [📋 Overview](#-overview)
+- [✨ Key Features](#-key-features)
+- [🛠️ Tech Stack](#️-tech-stack)
+- [📁 Project Structure](#-project-structure)
+- [🔐 Environment Variables](#-environment-variables)
+- [📦 Prerequisites](#-prerequisites)
+- [🚀 Local Development](#-local-development)
+- [🐳 Docker Configuration](#-docker-configuration)
+- [🌐 Deployment](#-deployment)
+- [🔌 API Highlights](#-api-highlights)
+- [🔒 Security Notes](#-security-notes)
+- [🤝 Contributing](#-contributing)
+- [👥 Contributors](#-contributors)
+- [📄 License](#-license)
+- [💬 Support](#-support)
+
+---
+
 ## 📋 Overview
 Fleetiva Roadlines is a production-ready logistics platform for load posting, truck assignment, booking management, and Bilty (LR) generation. It supports role-based access for **Customers**, **Drivers**, and **Admins**, with real-time shipment status updates and printable documentation.
 
@@ -358,7 +378,19 @@ We welcome contributions! Follow these steps to contribute:
 
 ---
 
-## 📄 License
+## � Contributors
+
+Thanks to all the amazing people who have contributed to Fleetiva Roadlines! 🎉
+
+<a href="https://github.com/sarojit049/Fleetiva-Roadlines/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=sarojit049/Fleetiva-Roadlines" alt="Contributors" />
+</a>
+
+> Want to see your avatar here? Check out the [Contributing](#-contributing) section to get started!
+
+---
+
+## �📄 License
 
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
