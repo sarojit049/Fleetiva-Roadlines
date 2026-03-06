@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const bookingSchema = new mongoose.Schema(
   {
     tenant: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant' },
-    load: { type: mongoose.Schema.Types.ObjectId, ref: 'Load', required: true },
+    load: { type: mongoose.Schema.Types.ObjectId, ref: 'Load', required: true, unique: true },
     truck: { type: mongoose.Schema.Types.ObjectId, ref: 'Truck', required: true },
     driver: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     customer: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
