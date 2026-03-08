@@ -7,6 +7,7 @@ import { toast } from "react-hot-toast";
 import api from "../api/axios";
 import { safeStorage } from "../utils/storage";
 import { auth, hasFirebaseConfig } from "../firebase";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -112,6 +113,7 @@ export default function Register() {
 
   return (
     <div className="auth-layout">
+      {loading && <LoadingSpinner fullScreen={true} message="Creating your account..." />}
       <Helmet>
         <title>Register - Fleetiva Roadlines</title>
         <meta

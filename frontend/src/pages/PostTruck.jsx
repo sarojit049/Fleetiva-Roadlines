@@ -2,12 +2,14 @@ import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import api from "../api/axios";
 import { toast } from "react-hot-toast";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function PostTruck() {
   const [vehicleNumber, setVehicleNumber] = useState("");
   const [capacity, setCapacity] = useState("");
   const [vehicleType, setVehicleType] = useState("");
   const [currentLocation, setCurrentLocation] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const postTruck = async () => {
     if (!vehicleNumber || !capacity || !vehicleType || !currentLocation) {
@@ -18,6 +20,7 @@ export default function PostTruck() {
       toast.error("Capacity must be greater than 0.");
       return;
     }
+    setLoading(true);
     try {
       await api.post("/truck/post", {
         vehicleNumber,
@@ -34,11 +37,14 @@ export default function PostTruck() {
       console.error("Failed to post truck:", error);
       const msg = error.response?.data?.message || "Failed to post truck.";
       toast.error(msg);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="page centered">
+      {loading && <LoadingSpinner fullScreen={true} message="Posting truck availability..." />}
       <Helmet>
         <title>Post Truck - Fleetiva Roadlines</title>
         <meta name="description" content="List your truck availability to get load assignments." />
