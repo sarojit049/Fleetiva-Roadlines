@@ -63,12 +63,10 @@ export default function Register() {
     if (!emailRegex.test(email)) {
       return "Please enter a valid email address.";
     }
-
-    const phoneRegex = /^[0-9]{10}$/;
-    if (!phoneRegex.test(phone)) {
-      return "Please enter a valid 10-digit phone number.";
-    }
-
+ const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+if (!phoneRegex.test(phone)) {
+  return "Please enter a valid phone number.";
+  
     if (password.length < 8) {
       return "Password must be at least 8 characters.";
     }
