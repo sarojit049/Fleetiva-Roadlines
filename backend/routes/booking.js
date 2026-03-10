@@ -25,6 +25,11 @@ const getFreightRate = () => {
   return Number.isFinite(rate) && rate > 0 ? rate : 1000;
 };
 
+/**
+ * @route   POST /api/booking/create
+ * @desc    Creates a new booking by matching a load with a truck.
+ * @access  Private (Admin)
+ */
 router.post('/create', authenticate, authorize('admin'), asyncHandler(async (req, res) => {
   const { error, value } = createBookingSchema.validate(req.body, { abortEarly: false });
   if (error) {
@@ -140,6 +145,11 @@ router.post('/create', authenticate, authorize('admin'), asyncHandler(async (req
   res.status(201).json({ booking, bilty });
 }));
 
+/**
+ * @route   GET /api/booking/all
+ * @desc    Retrieves all bookings in the system.
+ * @access  Private (Admin)
+ */
 router.get('/all', authenticate, authorize('admin'), asyncHandler(async (req, res) => {
   const bookings = await Booking.find()
     .populate('load')

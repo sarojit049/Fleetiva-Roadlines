@@ -6,6 +6,11 @@ const asyncHandler = require('../utils/asyncHandler');
 
 const router = express.Router();
 
+/**
+ * @route   POST /api/truck/post
+ * @desc    Registers a new truck for a driver.
+ * @access  Private (Driver)
+ */
 router.post('/post', authenticate, authorize('driver'), asyncHandler(async (req, res, next) => {
   const { error, value } = postTruckSchema.validate(req.body, { abortEarly: false });
   if (error) {
