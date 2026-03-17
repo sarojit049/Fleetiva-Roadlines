@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 const formatDate = (dateStr) => {
     if (!dateStr) return "—";
@@ -26,14 +27,7 @@ export default function MyTrucks() {
     }, []);
 
     if (loading) {
-        return (
-            <div className="page">
-                <div className="page-content">
-                    <h1 className="page-title">My Trucks</h1>
-                    <p>Loading your trucks...</p>
-                </div>
-            </div>
-        );
+        return <LoadingSpinner message="Loading your trucks..." />;
     }
 
     return (
