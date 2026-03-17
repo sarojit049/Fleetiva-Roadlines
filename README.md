@@ -333,6 +333,19 @@ To enable Google/Firebase authentication:
 
 ## 🤝 Contributing
 
+---
+
+## ⚡ Quick Setup Without Docker
+
+If you prefer a quick setup without Docker, you can run the backend and frontend manually.
+
+### Backend
+
+```bash
+cd backend
+npm install
+npm run dev
+
 We welcome contributions! Follow these steps to contribute:
 
 ### Git Workflow
