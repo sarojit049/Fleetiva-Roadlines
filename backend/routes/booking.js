@@ -9,8 +9,15 @@ const DriverAssignment = require('../models/DriverAssignment');
 const User = require('../models/User');
 const { authenticate, authorize } = require('../middleware/combinedAuth');
 const { generateBiltyPDF, generateInvoicePDF } = require('../utils/pdfGenerator');
-const { createBookingSchema, updateStatusSchema, updatePaymentSchema } = require('../validations/bookingValidation');
+const {
+  createBookingSchema,
+  updateStatusSchema,
+  updatePaymentSchema,
+  bookingIdParamSchema,
+  bookingListQuerySchema,
+} = require('../validations/bookingValidation');
 const asyncHandler = require('../utils/asyncHandler');
+const validateRequest = require('../middleware/validateRequest');
 
 const router = express.Router();
 
@@ -25,16 +32,8 @@ const getFreightRate = () => {
   return Number.isFinite(rate) && rate > 0 ? rate : 1000;
 };
 
-router.post('/create', authenticate, authorize('admin'), asyncHandler(async (req, res) => {
-  const { error, value } = createBookingSchema.validate(req.body, { abortEarly: false });
-  if (error) {
-    return res.status(400).json({
-      message: 'Validation failed',
-      errors: error.details.map(detail => ({ field: detail.path.join('.'), message: detail.message }))
-    });
-  }
-
-  const { loadId, truckId, advancePaid, paymentMode } = value;
+router.post('/create', authenticate, authorize('admin'), validateRequest({ body: createBookingSchema }), asyncHandler(async (req, res) => {
+  const { loadId, truckId, advancePaid, paymentMode } = req.body;
 
   const load = await Load.findById(loadId);
   if (!load) return res.status(404).json({ message: 'Load not found.' });
@@ -140,7 +139,7 @@ router.post('/create', authenticate, authorize('admin'), asyncHandler(async (req
   res.status(201).json({ booking, bilty });
 }));
 
-router.get('/all', authenticate, authorize('admin'), asyncHandler(async (req, res) => {
+router.get('/all', authenticate, authorize('admin'), validateRequest({ query: bookingListQuerySchema }), asyncHandler(async (req, res) => {
   const bookings = await Booking.find()
     .populate('load')
     .populate('driver', 'name phone')
@@ -149,30 +148,22 @@ router.get('/all', authenticate, authorize('admin'), asyncHandler(async (req, re
   res.json(bookings);
 }));
 
-router.get('/customer/bookings', authenticate, authorize('customer'), asyncHandler(async (req, res) => {
+router.get('/customer/bookings', authenticate, authorize('customer'), validateRequest({ query: bookingListQuerySchema }), asyncHandler(async (req, res) => {
   const bookings = await Booking.find({ customer: req.user.userId })
     .populate('load')
     .sort({ createdAt: -1 });
   res.json(bookings);
 }));
 
-router.get('/driver/bookings', authenticate, authorize('driver'), asyncHandler(async (req, res) => {
+router.get('/driver/bookings', authenticate, authorize('driver'), validateRequest({ query: bookingListQuerySchema }), asyncHandler(async (req, res) => {
   const bookings = await Booking.find({ driver: req.user.userId })
     .populate('load')
     .sort({ createdAt: -1 });
   res.json(bookings);
 }));
 
-router.patch('/:id/status', authenticate, authorize('driver'), asyncHandler(async (req, res) => {
-  const { error, value } = updateStatusSchema.validate(req.body, { abortEarly: false });
-  if (error) {
-    return res.status(400).json({
-      message: 'Validation failed',
-      errors: error.details.map(detail => ({ field: detail.path.join('.'), message: detail.message }))
-    });
-  }
-
-  const { status } = value;
+router.patch('/:id/status', authenticate, authorize('driver'), validateRequest({ params: bookingIdParamSchema, body: updateStatusSchema }), asyncHandler(async (req, res) => {
+  const { status } = req.body;
 
   const booking = await Booking.findOne({ _id: req.params.id, driver: req.user.userId });
   if (!booking) return res.status(404).json({ message: 'Booking not found.' });
@@ -195,16 +186,8 @@ router.patch('/:id/status', authenticate, authorize('driver'), asyncHandler(asyn
   res.json(booking);
 }));
 
-router.post('/:id/payment', authenticate, authorize('admin'), asyncHandler(async (req, res) => {
-  const { error, value } = updatePaymentSchema.validate(req.body, { abortEarly: false });
-  if (error) {
-    return res.status(400).json({
-      message: 'Validation failed',
-      errors: error.details.map(detail => ({ field: detail.path.join('.'), message: detail.message }))
-    });
-  }
-
-  const { status } = value;
+router.post('/:id/payment', authenticate, authorize('admin'), validateRequest({ params: bookingIdParamSchema, body: updatePaymentSchema }), asyncHandler(async (req, res) => {
+  const { status } = req.body;
 
   const booking = await Booking.findById(req.params.id);
   if (!booking) return res.status(404).json({ message: 'Booking not found.' });
@@ -227,7 +210,7 @@ router.post('/:id/payment', authenticate, authorize('admin'), asyncHandler(async
   res.json(booking);
 }));
 
-router.get('/:id/bilty', authenticate, asyncHandler(async (req, res) => {
+router.get('/:id/bilty', authenticate, validateRequest({ params: bookingIdParamSchema }), asyncHandler(async (req, res) => {
   const booking = await Booking.findById(req.params.id);
   if (!booking) return res.status(404).json({ message: 'Booking not found.' });
 
@@ -239,7 +222,7 @@ router.get('/:id/bilty', authenticate, asyncHandler(async (req, res) => {
   generateBiltyPDF(bilty, res);
 }));
 
-router.get('/:id/invoice', authenticate, asyncHandler(async (req, res) => {
+router.get('/:id/invoice', authenticate, validateRequest({ params: bookingIdParamSchema }), asyncHandler(async (req, res) => {
   const booking = await Booking.findById(req.params.id).populate('customer', 'name');
   if (!booking) return res.status(404).json({ message: 'Booking not found.' });
 

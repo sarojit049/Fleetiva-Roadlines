@@ -6,8 +6,16 @@ const User = require('../models/User');
 const LoginLog = require('../models/LoginLog');
 const { redisClient } = require('../config/clients');
 const sendEmail = require('../utils/email');
-const { registerSchema, loginSchema, firebaseRegisterSchema, forgotPasswordSchema, resetPasswordSchema } = require('../validations/authValidation');
+const {
+  registerSchema,
+  loginSchema,
+  firebaseLoginSchema,
+  firebaseRegisterSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+} = require('../validations/authValidation');
 const asyncHandler = require('../utils/asyncHandler');
+const validateRequest = require('../middleware/validateRequest');
 
 // Fallback in-memory OTP store if Redis is unavailable
 const otpStore = new Map();
@@ -54,16 +62,8 @@ const logLoginAttempt = ({ req, user, email, provider, status, reason }) =>
     userAgent: req.get('user-agent'),
   }).catch(() => { });
 
-router.post('/register', asyncHandler(async (req, res) => {
-  const { error, value } = registerSchema.validate(req.body, { abortEarly: false });
-  if (error) {
-    return res.status(400).json({
-      message: 'Validation failed',
-      errors: error.details.map(detail => ({ field: detail.path.join('.'), message: detail.message }))
-    });
-  }
-
-  const { name, email, phone, password, role, companyName } = value;
+router.post('/register', validateRequest({ body: registerSchema }), asyncHandler(async (req, res) => {
+  const { name, email, phone, password, role, companyName } = req.body;
 
   if (!validatePassword(password)) {
     return res.status(400).json({ message: 'Password must be at least 8 characters.' });
@@ -102,15 +102,7 @@ router.post('/register', asyncHandler(async (req, res) => {
   });
 }));
 
-router.post('/login', asyncHandler(async (req, res) => {
-  const { error } = loginSchema.validate(req.body, { abortEarly: false });
-  if (error) {
-    return res.status(400).json({
-      message: 'Validation failed',
-      errors: error.details.map(detail => ({ field: detail.path.join('.'), message: detail.message }))
-    });
-  }
-
+router.post('/login', validateRequest({ body: loginSchema }), asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   const user = await User.findOne({ email });
@@ -154,17 +146,8 @@ router.post('/login', asyncHandler(async (req, res) => {
   });
 }));
 
-router.post('/firebase/login', asyncHandler(async (req, res) => {
+router.post('/firebase/login', validateRequest({ body: firebaseLoginSchema }), asyncHandler(async (req, res) => {
   const { idToken } = req.body;
-  if (!idToken) {
-    await logLoginAttempt({
-      req,
-      provider: 'firebase',
-      status: 'failure',
-      reason: 'missing_token',
-    });
-    return res.status(400).json({ message: 'Firebase ID token is required.' });
-  }
   if (!firebaseReady()) {
     await logLoginAttempt({
       req,
@@ -208,16 +191,8 @@ router.post('/firebase/login', asyncHandler(async (req, res) => {
   });
 }));
 
-router.post('/firebase/register', asyncHandler(async (req, res) => {
-  const { error, value } = firebaseRegisterSchema.validate(req.body, { abortEarly: false });
-  if (error) {
-    return res.status(400).json({
-      message: 'Validation failed',
-      errors: error.details.map(detail => ({ field: detail.path.join('.'), message: detail.message }))
-    });
-  }
-
-  const { idToken, name, phone, role, companyName } = value;
+router.post('/firebase/register', validateRequest({ body: firebaseRegisterSchema }), asyncHandler(async (req, res) => {
+  const { idToken, name, phone, role, companyName } = req.body;
 
   if (!firebaseReady()) {
     return res.status(503).json({ message: 'Firebase authentication unavailable.' });
@@ -269,16 +244,8 @@ router.get('/me', require('../middleware/combinedAuth').authenticate, asyncHandl
   res.json({ user });
 }));
 
-router.post('/forgot-password', asyncHandler(async (req, res) => {
-  const { error, value } = forgotPasswordSchema.validate(req.body, { abortEarly: false });
-  if (error) {
-    return res.status(400).json({
-      message: 'Validation failed',
-      errors: error.details.map(detail => ({ field: detail.path.join('.'), message: detail.message }))
-    });
-  }
-
-  const { email } = value;
+router.post('/forgot-password', validateRequest({ body: forgotPasswordSchema }), asyncHandler(async (req, res) => {
+  const { email } = req.body;
 
 
   // check removed to ensure OTP sends regardless of user existence
@@ -301,16 +268,8 @@ router.post('/forgot-password', asyncHandler(async (req, res) => {
   res.json({ message: 'OTP sent successfully.' });
 }));
 
-router.post('/reset-password', asyncHandler(async (req, res) => {
-  const { error, value } = resetPasswordSchema.validate(req.body, { abortEarly: false });
-  if (error) {
-    return res.status(400).json({
-      message: 'Validation failed',
-      errors: error.details.map(detail => ({ field: detail.path.join('.'), message: detail.message }))
-    });
-  }
-
-  const { email, otp, newPassword } = value;
+router.post('/reset-password', validateRequest({ body: resetPasswordSchema }), asyncHandler(async (req, res) => {
+  const { email, otp, newPassword } = req.body;
   let storedOtp = null;
 
   if (redisClient) {

@@ -1,21 +1,14 @@
 const express = require('express');
 const Load = require('../models/Load');
 const { authenticate, authorize } = require('../middleware/combinedAuth');
-const { postLoadSchema } = require('../validations/loadValidation');
+const { postLoadSchema, loadListQuerySchema } = require('../validations/loadValidation');
 const asyncHandler = require('../utils/asyncHandler');
+const validateRequest = require('../middleware/validateRequest');
 
 const router = express.Router();
 
-router.post('/post', authenticate, authorize('customer'), asyncHandler(async (req, res) => {
-  const { error, value } = postLoadSchema.validate(req.body, { abortEarly: false });
-  if (error) {
-    return res.status(400).json({
-      message: 'Validation failed',
-      errors: error.details.map(detail => ({ field: detail.path.join('.'), message: detail.message }))
-    });
-  }
-
-  const { material, requiredCapacity, from, to, consignorName, consigneeName } = value;
+router.post('/post', authenticate, authorize('customer'), validateRequest({ body: postLoadSchema }), asyncHandler(async (req, res) => {
+  const { material, requiredCapacity, from, to, consignorName, consigneeName } = req.body;
 
   const load = await Load.create({
     customer: req.user.userId,
@@ -30,12 +23,12 @@ router.post('/post', authenticate, authorize('customer'), asyncHandler(async (re
   res.status(201).json(load);
 }));
 
-router.get('/customer', authenticate, authorize('customer'), asyncHandler(async (req, res) => {
+router.get('/customer', authenticate, authorize('customer'), validateRequest({ query: loadListQuerySchema }), asyncHandler(async (req, res) => {
   const loads = await Load.find({ customer: req.user.userId }).sort({ createdAt: -1 });
   res.json(loads);
 }));
 
-router.get('/available', authenticate, authorize('admin'), asyncHandler(async (req, res) => {
+router.get('/available', authenticate, authorize('admin'), validateRequest({ query: loadListQuerySchema }), asyncHandler(async (req, res) => {
   const loads = await Load.find().sort({ createdAt: -1 });
   res.json(loads);
 }));

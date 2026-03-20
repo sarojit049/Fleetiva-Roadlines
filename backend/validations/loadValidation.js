@@ -9,6 +9,14 @@ const postLoadSchema = Joi.object({
   consigneeName: Joi.string().trim().min(2).max(200).required()
 });
 
+const loadListQuerySchema = Joi.object({
+  page: Joi.number().integer().min(1).optional(),
+  limit: Joi.number().integer().min(1).max(100).optional(),
+  sortBy: Joi.string().valid('createdAt').optional(),
+  sortOrder: Joi.string().valid('asc', 'desc').optional()
+});
+
 module.exports = {
-  postLoadSchema
+  postLoadSchema,
+  loadListQuerySchema
 };
