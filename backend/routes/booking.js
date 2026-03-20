@@ -11,6 +11,7 @@ const { authenticate, authorize } = require('../middleware/combinedAuth');
 const { generateBiltyPDF, generateInvoicePDF } = require('../utils/pdfGenerator');
 const { createBookingSchema, updateStatusSchema, updatePaymentSchema } = require('../validations/bookingValidation');
 const asyncHandler = require('../utils/asyncHandler');
+const { AppError } = require('../utils/appError');
 
 const router = express.Router();
 
@@ -36,108 +37,136 @@ router.post('/create', authenticate, authorize('admin'), asyncHandler(async (req
 
   const { loadId, truckId, advancePaid, paymentMode } = value;
 
-  const load = await Load.findById(loadId);
-  if (!load) return res.status(404).json({ message: 'Load not found.' });
-  if (load.status !== 'pending') {
-    return res.status(400).json({ message: 'Load is not available.' });
+  const session = await Booking.startSession();
+  let responsePayload;
+
+  try {
+    await session.withTransaction(async () => {
+      const load = await Load.findOneAndUpdate(
+        { _id: loadId, status: 'pending' },
+        { $set: { status: 'assigned' } },
+        { new: true, session }
+      );
+
+      if (!load) {
+        const existingLoad = await Load.findById(loadId).session(session);
+        if (!existingLoad) {
+          throw new AppError('Load not found.', 404);
+        }
+        throw new AppError('Load is already assigned.', 409);
+      }
+
+      const truck = await Truck.findOneAndUpdate(
+        { _id: truckId, isAvailable: true },
+        { $set: { isAvailable: false } },
+        { new: true, session }
+      );
+
+      if (!truck) {
+        throw new AppError('Truck is not available.', 400);
+      }
+
+      const driver = await User.findById(truck.driver).session(session);
+      if (!driver) throw new AppError('Driver not found.', 404);
+
+      const freightAmount = load.requiredCapacity * getFreightRate();
+      const gstAmount = freightAmount * 0.12;
+      const advance = Number(advancePaid) || 0;
+      const total = freightAmount + gstAmount;
+      const balanceAmount = Math.max(total - advance, 0);
+
+      const [booking] = await Booking.create([
+        {
+          load: load._id,
+          truck: truck._id,
+          driver: truck.driver,
+          customer: load.customer,
+          status: 'assigned',
+          paymentStatus: 'pending',
+          freightAmount,
+          advancePaid: advance,
+          balanceAmount,
+          paymentMode,
+          gstAmount,
+          from: load.from,
+          to: load.to,
+        }
+      ], { session });
+
+      let lrNumber = generateLRNumber();
+      while (await Bilty.findOne({ lrNumber }).session(session)) {
+        lrNumber = generateLRNumber();
+      }
+
+      const [bilty] = await Bilty.create([
+        {
+          booking: booking._id,
+          lrNumber,
+          consignorName: load.consignorName,
+          consigneeName: load.consigneeName,
+          pickupLocation: load.from,
+          dropLocation: load.to,
+          materialType: load.material,
+          weight: load.requiredCapacity,
+          truckType: truck.vehicleType,
+          driverName: driver.name,
+          driverPhone: driver.phone,
+          vehicleNumber: truck.vehicleNumber,
+          freightAmount,
+          advancePaid: advance,
+          balanceAmount,
+          paymentMode,
+          shipmentStatus: booking.status,
+        }
+      ], { session });
+
+      await Payment.create([
+        {
+          booking: booking._id,
+          amount: total,
+          advancePaid: advance,
+          balanceAmount,
+          paymentMode,
+          status: 'pending',
+        }
+      ], { session });
+
+      await BillingRecord.create([
+        {
+          booking: booking._id,
+          customer: booking.customer,
+          driver: booking.driver,
+          truck: booking.truck,
+          load: booking.load,
+          lrNumber,
+          invoiceNumber: `INV-${booking._id.toString().slice(-6).toUpperCase()}`,
+          freightAmount,
+          gstAmount,
+          totalAmount: total,
+          advancePaid: advance,
+          balanceAmount,
+          paymentMode,
+          paymentStatus: booking.paymentStatus,
+        }
+      ], { session });
+
+      await DriverAssignment.create([
+        {
+          booking: booking._id,
+          driver: truck.driver,
+          truck: truck._id,
+          assignedBy: req.user.userId,
+          status: booking.status,
+        }
+      ], { session });
+
+      responsePayload = { booking, bilty };
+    });
+  } finally {
+    session.endSession();
   }
 
-  const truck = await Truck.findById(truckId);
-  if (!truck || !truck.isAvailable) {
-    return res.status(400).json({ message: 'Truck is not available.' });
-  }
-
-  const driver = await User.findById(truck.driver);
-  if (!driver) return res.status(404).json({ message: 'Driver not found.' });
-
-  const freightAmount = load.requiredCapacity * getFreightRate();
-  const gstAmount = freightAmount * 0.12;
-  const advance = Number(advancePaid) || 0;
-  const total = freightAmount + gstAmount;
-  const balanceAmount = Math.max(total - advance, 0);
-
-  const booking = await Booking.create({
-    load: load._id,
-    truck: truck._id,
-    driver: truck.driver,
-    customer: load.customer,
-    status: 'assigned',
-    paymentStatus: 'pending',
-    freightAmount,
-    advancePaid: advance,
-    balanceAmount,
-    paymentMode,
-    gstAmount,
-    from: load.from,
-    to: load.to,
-  });
-
-  let lrNumber = generateLRNumber();
-  while (await Bilty.findOne({ lrNumber })) {
-    lrNumber = generateLRNumber();
-  }
-
-  const bilty = await Bilty.create({
-    booking: booking._id,
-    lrNumber,
-    consignorName: load.consignorName,
-    consigneeName: load.consigneeName,
-    pickupLocation: load.from,
-    dropLocation: load.to,
-    materialType: load.material,
-    weight: load.requiredCapacity,
-    truckType: truck.vehicleType,
-    driverName: driver.name,
-    driverPhone: driver.phone,
-    vehicleNumber: truck.vehicleNumber,
-    freightAmount,
-    advancePaid: advance,
-    balanceAmount,
-    paymentMode,
-    shipmentStatus: booking.status,
-  });
-
-  await Payment.create({
-    booking: booking._id,
-    amount: total,
-    advancePaid: advance,
-    balanceAmount,
-    paymentMode,
-    status: 'pending',
-  });
-
-  await BillingRecord.create({
-    booking: booking._id,
-    customer: booking.customer,
-    driver: booking.driver,
-    truck: booking.truck,
-    load: booking.load,
-    lrNumber,
-    invoiceNumber: `INV-${booking._id.toString().slice(-6).toUpperCase()}`,
-    freightAmount,
-    gstAmount,
-    totalAmount: total,
-    advancePaid: advance,
-    balanceAmount,
-    paymentMode,
-    paymentStatus: booking.paymentStatus,
-  });
-
-  await DriverAssignment.create({
-    booking: booking._id,
-    driver: truck.driver,
-    truck: truck._id,
-    assignedBy: req.user.userId,
-    status: booking.status,
-  });
-
-  load.status = 'matched';
-  await load.save();
-
-  truck.isAvailable = false;
-  await truck.save();
-
-  res.status(201).json({ booking, bilty });
+  res.status(201).json(responsePayload);
 }));
 
 router.get('/all', authenticate, authorize('admin'), asyncHandler(async (req, res) => {

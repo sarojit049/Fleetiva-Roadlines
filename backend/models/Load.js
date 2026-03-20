@@ -10,7 +10,7 @@ const loadSchema = new mongoose.Schema(
     requiredCapacity: { type: Number, required: true, min: 0 },
     from: { type: String, required: true },
     to: { type: String, required: true },
-    status: { type: String, enum: ['pending', 'matched', 'delivered'], default: 'pending' },
+    status: { type: String, enum: ['pending', 'assigned', 'matched', 'delivered'], default: 'pending' },
   },
   { timestamps: true }
 );
