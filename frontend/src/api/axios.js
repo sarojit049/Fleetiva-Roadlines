@@ -2,13 +2,49 @@ import axios from "axios";
 import { getApiBaseUrl } from "./baseUrl";
 import { safeStorage } from "../utils/storage";
 
+const ACCESS_TOKEN_KEY = "accessToken";
+const LOGIN_ROUTE = "/login";
+
+let authRedirectHandler = null;
+
+export const setAuthRedirectHandler = (handler) => {
+  authRedirectHandler = typeof handler === "function" ? handler : null;
+};
+
+const clearAuthToken = () => {
+  safeStorage.remove(ACCESS_TOKEN_KEY);
+};
+
+const redirectToLogin = () => {
+  if (typeof authRedirectHandler === "function") {
+    authRedirectHandler(LOGIN_ROUTE);
+    return;
+  }
+
+  if (typeof window !== "undefined" && window.location.pathname !== LOGIN_ROUTE) {
+    window.location.replace(LOGIN_ROUTE);
+  }
+};
+
+const notifyGlobalServerError = (error) => {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(
+    new CustomEvent("api:server-error", {
+      detail: {
+        status: error.response?.status,
+        message: error.response?.data?.message || "Server error",
+      },
+    })
+  );
+};
+
 const api = axios.create({
   baseURL: getApiBaseUrl(),
   withCredentials: true,
 });
 
 api.interceptors.request.use((config) => {
-  const token = safeStorage.get("accessToken");
+  const token = safeStorage.get(ACCESS_TOKEN_KEY);
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -25,10 +61,8 @@ api.interceptors.response.use(
     const status = error.response?.status;
 
     if (status === 401) {
-      safeStorage.remove("accessToken");
-      if (typeof window !== "undefined") {
-        window.location.assign("/login");
-      }
+      clearAuthToken();
+      redirectToLogin();
       return Promise.reject(error);
     }
 
@@ -45,6 +79,10 @@ api.interceptors.response.use(
       const backoff = 250 * 2 ** (config.metadata.retryCount - 1);
       await new Promise((resolve) => setTimeout(resolve, backoff));
       return api(config);
+    }
+
+    if (status >= 500) {
+      notifyGlobalServerError(error);
     }
 
     return Promise.reject(error);
