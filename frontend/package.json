@@ -16,8 +16,13 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-helmet-async": "^2.0.5",
+
+    "react-router-dom": "^7.1.5",
+    "socket.io-client": "^4.8.3"
+
     "react-hot-toast": "^2.6.0",
     "react-router-dom": "^7.1.5"
+
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
