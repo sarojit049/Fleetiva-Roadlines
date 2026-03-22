@@ -12,21 +12,21 @@ export default function PostLoad() {
   const [to, setTo] = useState("");
 
   const postLoad = async () => {
-    if (
-      !consignorName ||
-      !consigneeName ||
-      !material ||
-      !capacity ||
-      !from ||
-      !to
-    ) {
+    if (!consignorName.trim() || !consigneeName.trim() || !material.trim() || !capacity || !from.trim() || !to.trim()) {
       toast.error("Please fill in all required fields.");
       return;
     }
-    if (Number(capacity) <= 0) {
+
+    if (!capacity || isNaN(Number(capacity)) || Number(capacity) <= 0) {
       toast.error("Capacity must be greater than 0.");
       return;
     }
+
+    if (from.trim().toLowerCase() === to.trim().toLowerCase()) {
+      toast.error("Origin and destination cities cannot be the same.");
+      return;
+    }
+
     try {
       await api.post("/load/post", {
         consignorName,
@@ -43,12 +43,13 @@ export default function PostLoad() {
       setCapacity("");
       setFrom("");
       setTo("");
-
     } catch (err) {
-
-      toast.error(err.response?.data?.message || "Load post failed");
-
-
+      const backendErrors = err.response?.data?.errors;
+      if (backendErrors && backendErrors.length > 0) {
+        toast.error(backendErrors[0].message);
+      } else {
+        toast.error(err.response?.data?.message || "Load post failed");
+      }
     }
   };
 
