@@ -4,13 +4,14 @@ const { connectMongo } = require("./config/db2");
 
 require("./config/clients");
 
-// ================= SERVER START =================
+// ================= SERVER CONFIG =================
 const PORT = process.env.PORT || 5000;
 
-// ================= DATABASE =================
+// ================= DATABASE + SERVER START =================
 connectMongo()
   .then(() => {
     console.log("✅ MongoDB connected");
+
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
     });
