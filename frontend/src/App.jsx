@@ -20,6 +20,7 @@ import Profile from "./pages/Profile";
 import Stats from "./pages/Stats";
 import MyLoads from "./pages/MyLoads";
 import MyTrucks from "./pages/MyTrucks";
+import NotFound from "./pages/NotFound";
 import {
   BrowserRouter as Router,
   Routes,
@@ -56,7 +57,18 @@ const RootRedirect = () => {
 
 // Dashboard routes use DashboardLayout with sidebar, so no Navbar needed
 const DASHBOARD_PATHS = ["/admin", "/dashboard", "/driver", "/superadmin"];
-
+const NON_DASHBOARD_PATHS = [
+  "/",
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/post-load",
+  "/post-truck",
+  "/profile",
+  "/stats",
+  "/my-loads",
+  "/my-trucks"
+];
 const AppContent = () => {
   const { user } = useContext(AppContext);
   const location = useLocation();
@@ -64,6 +76,8 @@ const AppContent = () => {
   const isDashboardRoute = DASHBOARD_PATHS.some(
     (p) => location.pathname === p || location.pathname.startsWith(p + "/")
   );
+  const isNotFoundRoute =
+    !isDashboardRoute && !NON_DASHBOARD_PATHS.includes(location.pathname);
 
   // Show Navbar only for logged-in users on NON-dashboard routes
   const showNavbar = useMemo(
@@ -72,7 +86,8 @@ const AppContent = () => {
   );
 
   // Show Footer on non-dashboard pages (except landing, which has its own)
-  const showFooter = !isDashboardRoute && location.pathname !== "/";
+  const showFooter =
+    !isDashboardRoute && location.pathname !== "/" && !isNotFoundRoute;
 
   return (
     <>
@@ -176,6 +191,7 @@ const AppContent = () => {
             </ProtectedRoute>
           }
         />
+        <Route path="*" element={<NotFound />} />
       </Routes>
 
       {showFooter && <Footer />}
