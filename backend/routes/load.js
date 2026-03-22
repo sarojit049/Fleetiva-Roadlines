@@ -6,6 +6,11 @@ const asyncHandler = require('../utils/asyncHandler');
 
 const router = express.Router();
 
+/**
+ * @route   POST /api/load/post
+ * @desc    Creates a new load for a customer.
+ * @access  Private (Customer)
+ */
 router.post('/post', authenticate, authorize('customer'), asyncHandler(async (req, res) => {
   const { error, value } = postLoadSchema.validate(req.body, { abortEarly: false });
   if (error) {

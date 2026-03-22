@@ -1,7 +1,16 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { vi } from "vitest";
+import { HelmetProvider } from "react-helmet-async";
 import Dashboard from "../pages/Dashboard";
+import { AppContext } from "../context/AppContext";
+
+// Mock AppContext
+const MockAppProvider = ({ children }) => (
+  <AppContext.Provider value={{ user: { name: "Test User" }, logout: vi.fn() }}>
+    {children}
+  </AppContext.Provider>
+);
 
 vi.mock("../api/axios", () => ({
   default: {
@@ -30,9 +39,13 @@ vi.mock("../utils/storage", () => ({
 describe("Dashboard", () => {
   it("loads and renders bookings", async () => {
     render(
-      <MemoryRouter>
-        <Dashboard />
-      </MemoryRouter>
+      <MockAppProvider>
+        <HelmetProvider>
+          <MemoryRouter>
+            <Dashboard />
+          </MemoryRouter>
+        </HelmetProvider>
+      </MockAppProvider>
     );
 
     await waitFor(() => {

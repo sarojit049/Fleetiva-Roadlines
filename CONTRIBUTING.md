@@ -58,6 +58,8 @@ When submitting a PR, please fill out the PR template. Be sure to:
   ```bash
   npm run lint
   ```
+- **UI Guidelines**: Follow the clean, modern aesthetic outlined in [UX_REDESIGN.md](./UX_REDESIGN.md). Use HSL colors and consistent spacing.
+- **Testing**: Back new features or major UI changes with unit tests. Run `npm run test` or `npx vitest run` before submitting.
 
 ## ❓ Questions?
 

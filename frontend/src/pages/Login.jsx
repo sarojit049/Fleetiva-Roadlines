@@ -92,7 +92,7 @@ export default function Login() {
           else if (role === "driver") navigate("/driver", { replace: true });
           else navigate("/dashboard", { replace: true });
           return;
-        } catch (firebaseErr) {
+        } catch {
           // Firebase also failed, show backend error
         }
       }

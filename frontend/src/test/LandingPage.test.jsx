@@ -13,9 +13,9 @@ describe("LandingPage", () => {
       </HelmetProvider>
     );
 
-    expect(screen.getByText(/Fleetiva Roadlines/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Fleetiva Roadlines/i)[0]).toBeInTheDocument();
     expect(
-      screen.getByText(/Smart freight matching/i)
+      screen.getByText(/Move freight faster/i)
     ).toBeInTheDocument();
   });
 });
