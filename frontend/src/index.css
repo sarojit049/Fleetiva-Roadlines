@@ -2591,6 +2591,35 @@ textarea:focus {
     padding: 32px 16px 48px;
   }
 
+  .landing-page .page-content {
+    gap: 48px;
+  }
+
+  .landing-roles {
+    margin-top: 16px;
+  }
+
+  .landing-steps {
+    margin-top: 16px;
+  }
+
+  .hero-grid {
+    gap: 20px;
+    margin-top: 16px;
+  }
+
+  .feature-card {
+    padding: 24px 20px;
+  }
+
+  .role-card {
+    padding: 24px 20px;
+  }
+
+  .steps-grid {
+    gap: 20px;
+  }
+
   .orb-1 {
     width: 250px;
     height: 250px;
