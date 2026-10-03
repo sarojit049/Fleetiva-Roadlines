@@ -356,6 +356,7 @@ textarea:focus {
   width: 100%;
   max-width: 440px;
   padding: 32px;
+  margin: 32px 0px;
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
