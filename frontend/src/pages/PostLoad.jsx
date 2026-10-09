@@ -43,32 +43,51 @@ export default function PostLoad() {
       setCapacity("");
       setFrom("");
       setTo("");
-
     } catch (err) {
-
       toast.error(err.response?.data?.message || "Load post failed");
-
-
     }
   };
 
   return (
-    <div className="page centered">
+    <div
+      className="page centered"
+      style={{ padding: "16px" }} // responsive padding
+    >
       <Helmet>
         <title>Post Load - Fleetiva Roadlines</title>
-        <meta name="description" content="Post a new load requirement to find matching trucks." />
+        <meta
+          name="description"
+          content="Post a new load requirement to find matching trucks."
+        />
       </Helmet>
-      <div className="auth-card" style={{ maxWidth: 520 }}>
+
+      <div
+        className="auth-card"
+        style={{
+          maxWidth: 520,
+          width: "100%", // responsive width
+        }}
+      >
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           <h2 className="page-title">Post New Load</h2>
           <p className="page-subtitle">
             Enter cargo details to find matching trucks.
           </p>
         </div>
+
         <div className="form">
-          <div className="form-row">
-            <div className="stack">
-              <label className="label" htmlFor="consignor">Consignor Name</label>
+          <div
+            className="form-row"
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 16,
+            }}
+          >
+            <div className="stack" style={{ flex: "1 1 220px" }}>
+              <label className="label" htmlFor="consignor">
+                Consignor Name
+              </label>
               <input
                 id="consignor"
                 className="input"
@@ -77,8 +96,11 @@ export default function PostLoad() {
                 onChange={(e) => setConsignorName(e.target.value)}
               />
             </div>
-            <div className="stack">
-              <label className="label" htmlFor="consignee">Consignee Name</label>
+
+            <div className="stack" style={{ flex: "1 1 220px" }}>
+              <label className="label" htmlFor="consignee">
+                Consignee Name
+              </label>
               <input
                 id="consignee"
                 className="input"
@@ -88,9 +110,19 @@ export default function PostLoad() {
               />
             </div>
           </div>
-          <div className="form-row">
-            <div className="stack">
-              <label className="label" htmlFor="material">Material Name</label>
+
+          <div
+            className="form-row"
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 16,
+            }}
+          >
+            <div className="stack" style={{ flex: "1 1 220px" }}>
+              <label className="label" htmlFor="material">
+                Material Name
+              </label>
               <input
                 id="material"
                 className="input"
@@ -99,8 +131,11 @@ export default function PostLoad() {
                 onChange={(e) => setMaterial(e.target.value)}
               />
             </div>
-            <div className="stack">
-              <label className="label" htmlFor="capacity">Required Capacity (Tons)</label>
+
+            <div className="stack" style={{ flex: "1 1 220px" }}>
+              <label className="label" htmlFor="capacity">
+                Required Capacity (Tons)
+              </label>
               <input
                 id="capacity"
                 className="input"
@@ -111,9 +146,19 @@ export default function PostLoad() {
               />
             </div>
           </div>
-          <div className="form-row">
-            <div className="stack">
-              <label className="label" htmlFor="from">Origin City</label>
+
+          <div
+            className="form-row"
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 16,
+            }}
+          >
+            <div className="stack" style={{ flex: "1 1 220px" }}>
+              <label className="label" htmlFor="from">
+                Origin City
+              </label>
               <input
                 id="from"
                 className="input"
@@ -122,8 +167,11 @@ export default function PostLoad() {
                 onChange={(e) => setFrom(e.target.value)}
               />
             </div>
-            <div className="stack">
-              <label className="label" htmlFor="to">Destination City</label>
+
+            <div className="stack" style={{ flex: "1 1 220px" }}>
+              <label className="label" htmlFor="to">
+                Destination City
+              </label>
               <input
                 id="to"
                 className="input"
@@ -133,7 +181,15 @@ export default function PostLoad() {
               />
             </div>
           </div>
-          <button onClick={postLoad} className="btn btn-primary">
+
+          <button
+            onClick={postLoad}
+            className="btn btn-primary"
+            style={{
+              width: "100%", // mobile-friendly button
+              marginTop: 8,
+            }}
+          >
             Submit Load
           </button>
         </div>

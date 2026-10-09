@@ -50,24 +50,58 @@ export default function Dashboard() {
     <DashboardLayout>
       <Helmet>
         <title>Dashboard - Fleetiva Roadlines</title>
-        <meta name="description" content="Track your active shipments and post new loads." />
+        <meta
+          name="description"
+          content="Track your active shipments and post new loads."
+        />
       </Helmet>
 
       <WelcomeHeader
         name={user?.name}
         subtitle="Track your shipments and manage your loads from here."
       >
-        <button className="btn btn-primary" onClick={() => navigate("/post-load")}>
+        <button
+          className="btn btn-primary"
+          style={{ width: "100%", maxWidth: 220 }}
+          onClick={() => navigate("/post-load")}
+        >
           + Post New Load
         </button>
       </WelcomeHeader>
 
       {/* Stats */}
-      <div className="stat-grid">
-        <StatCard icon="📦" label="Total Bookings" value={bookings.length} accent="#6366f1" />
-        <StatCard icon="🚚" label="In Transit" value={inTransit} accent="#3b82f6" />
-        <StatCard icon="✅" label="Delivered" value={delivered} accent="#22c55e" />
-        <StatCard icon="⏳" label="Active" value={active} accent="#f59e0b" />
+      <div
+        className="stat-grid"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+          gap: 16,
+        }}
+      >
+        <StatCard
+          icon="📦"
+          label="Total Bookings"
+          value={bookings.length}
+          accent="#6366f1"
+        />
+        <StatCard
+          icon="🚚"
+          label="In Transit"
+          value={inTransit}
+          accent="#3b82f6"
+        />
+        <StatCard
+          icon="✅"
+          label="Delivered"
+          value={delivered}
+          accent="#22c55e"
+        />
+        <StatCard
+          icon="⏳"
+          label="Active"
+          value={active}
+          accent="#f59e0b"
+        />
       </div>
 
       {/* Bookings Section */}
@@ -89,36 +123,81 @@ export default function Dashboard() {
           <div className="dash-empty">
             <span className="dash-empty-icon">📦</span>
             <p className="dash-empty-title">No bookings yet</p>
-            <p className="dash-empty-desc">Post your first load to start receiving matches.</p>
-            <button className="btn btn-primary" onClick={() => navigate("/post-load")}>
+            <p className="dash-empty-desc">
+              Post your first load to start receiving matches.
+            </p>
+            <button
+              className="btn btn-primary"
+              style={{ width: "100%", maxWidth: 220 }}
+              onClick={() => navigate("/post-load")}
+            >
               Post a Load
             </button>
           </div>
         ) : (
           <div className="dash-card-list">
             {bookings.map((b) => (
-              <div key={b._id} className="dash-booking-card">
-                <div>
-                  <div className="dash-booking-route">
+              <div
+                key={b._id}
+                className="dash-booking-card"
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 12,
+                }}
+              >
+                <div style={{ minWidth: 0 }}>
+                  <div
+                    className="dash-booking-route"
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 6,
+                      wordBreak: "break-word",
+                    }}
+                  >
                     <span>{b.from}</span>
                     <span className="dash-route-arrow">→</span>
                     <span>{b.to}</span>
                   </div>
                   <span className="dash-booking-info">
-                    {b.load?.material || "Load"} • {new Date(b.createdAt).toLocaleDateString()}
+                    {b.load?.material || "Load"} •{" "}
+                    {new Date(b.createdAt).toLocaleDateString()}
                   </span>
                 </div>
-                <div className="dash-booking-meta">
-                  <span className={`tag ${b.status === "delivered" ? "success"
-                    : b.status === "in-transit" ? "info"
-                      : "warning"
-                    }`}>
+
+                <div
+                  className="dash-booking-meta"
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 8,
+                    alignItems: "center",
+                  }}
+                >
+                  <span
+                    className={`tag ${
+                      b.status === "delivered"
+                        ? "success"
+                        : b.status === "in-transit"
+                        ? "info"
+                        : "warning"
+                    }`}
+                  >
                     {b.status}
                   </span>
-                  <button className="btn btn-secondary btn-sm" onClick={() => downloadBilty(b._id)}>
+
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => downloadBilty(b._id)}
+                  >
                     Bilty
                   </button>
-                  <button className="btn btn-secondary btn-sm" onClick={() => downloadInvoice(b._id)}>
+
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => downloadInvoice(b._id)}
+                  >
                     Invoice
                   </button>
                 </div>

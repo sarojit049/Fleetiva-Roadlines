@@ -65,7 +65,10 @@ export default function DriverDashboard() {
     <DashboardLayout>
       <Helmet>
         <title>Driver Dashboard - Fleetiva Roadlines</title>
-        <meta name="description" content="View assigned trips and update delivery status." />
+        <meta
+          name="description"
+          content="View assigned trips and update delivery status."
+        />
       </Helmet>
 
       <WelcomeHeader
@@ -74,7 +77,14 @@ export default function DriverDashboard() {
       />
 
       {/* Stats */}
-      <div className="stat-grid">
+      <div
+        className="stat-grid"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+          gap: 16,
+        }}
+      >
         <StatCard icon="📋" label="Assigned" value={active} accent="#f59e0b" />
         <StatCard icon="🚚" label="In Transit" value={inTransit} accent="#3b82f6" />
         <StatCard icon="✅" label="Delivered" value={delivered} accent="#22c55e" />
@@ -101,38 +111,85 @@ export default function DriverDashboard() {
         ) : bookings.length > 0 ? (
           <div className="dash-card-list">
             {bookings.map((b) => (
-              <div key={b._id} className="dash-booking-card">
-                <div>
-                  <div className="dash-booking-route">
+              <div
+                key={b._id}
+                className="dash-booking-card"
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 12,
+                }}
+              >
+                <div style={{ minWidth: 0 }}>
+                  <div
+                    className="dash-booking-route"
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 6,
+                      wordBreak: "break-word",
+                    }}
+                  >
                     <span>{b.from}</span>
                     <span className="dash-route-arrow">→</span>
                     <span>{b.to}</span>
                   </div>
                   <span className="dash-booking-info">
-                    Status: {b.status} • {new Date(b.createdAt).toLocaleDateString()}
+                    Status: {b.status} •{" "}
+                    {new Date(b.createdAt).toLocaleDateString()}
                   </span>
                 </div>
-                <div className="dash-booking-meta">
-                  <span className={`tag ${b.status === "delivered" ? "success"
-                      : b.status === "in-transit" ? "info"
+
+                <div
+                  className="dash-booking-meta"
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 8,
+                    alignItems: "center",
+                  }}
+                >
+                  <span
+                    className={`tag ${
+                      b.status === "delivered"
+                        ? "success"
+                        : b.status === "in-transit"
+                        ? "info"
                         : "warning"
-                    }`}>
+                    }`}
+                  >
                     {b.status}
                   </span>
+
                   {b.status === "assigned" && (
-                    <button className="btn btn-primary btn-sm" onClick={() => updateStatus(b._id, "in-transit")}>
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={() => updateStatus(b._id, "in-transit")}
+                    >
                       Start Trip
                     </button>
                   )}
+
                   {b.status === "in-transit" && (
-                    <button className="btn btn-success btn-sm" onClick={() => updateStatus(b._id, "delivered")}>
+                    <button
+                      className="btn btn-success btn-sm"
+                      onClick={() => updateStatus(b._id, "delivered")}
+                    >
                       Mark Delivered
                     </button>
                   )}
-                  <button className="btn btn-secondary btn-sm" onClick={() => downloadBilty(b._id)}>
+
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => downloadBilty(b._id)}
+                  >
                     Bilty
                   </button>
-                  <button className="btn btn-secondary btn-sm" onClick={() => downloadInvoice(b._id)}>
+
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => downloadInvoice(b._id)}
+                  >
                     Invoice
                   </button>
                 </div>
@@ -143,7 +200,9 @@ export default function DriverDashboard() {
           <div className="dash-empty">
             <span className="dash-empty-icon">🚛</span>
             <p className="dash-empty-title">No active trips</p>
-            <p className="dash-empty-desc">Check back soon for new assignments.</p>
+            <p className="dash-empty-desc">
+              Check back soon for new assignments.
+            </p>
           </div>
         )}
       </div>
